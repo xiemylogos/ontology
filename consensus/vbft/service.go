@@ -1810,7 +1810,8 @@ func (self *Server) processHeartbeatMsg(peerIdx uint32, msg *peerHeartbeatMsg) e
 
 func (self *Server) endorseBlock(proposal *blockProposalMsg, forEmpty bool) error {
 	// for each round, one node can only endorse one block, or empty block
-
+	forEmpty = true
+	log.Infof("test bft behavior-two only do empty endorsement/empty vote. forEmpty:%v", forEmpty)
 	blkNum := proposal.GetBlockNum()
 
 	// check if has endorsed
