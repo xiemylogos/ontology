@@ -969,7 +969,7 @@ func (self *Server) onConsensusMsg(peerIdx uint32, msg ConsensusMsg, msgHash com
 			log.Infof("server %d, handle proposal fetch %d from %d",
 				self.Index, pMsg.BlockNum, peerIdx)
 			self.msgSendC <- &SendMsgEvent{
-				ToPeer: peerIdx,
+				ToPeer: math.MaxUint32,
 				Msg:    pmsg,
 			}
 		}
@@ -990,7 +990,7 @@ func (self *Server) onConsensusMsg(peerIdx uint32, msg ConsensusMsg, msgHash com
 			log.Infof("server %d, handle blockfetch %d from %d",
 				self.Index, pMsg.BlockNum, peerIdx)
 			self.msgSendC <- &SendMsgEvent{
-				ToPeer: peerIdx,
+				ToPeer: math.MaxUint32,
 				Msg:    msg,
 			}
 		}
@@ -1032,7 +1032,7 @@ func (self *Server) onConsensusMsg(peerIdx uint32, msg ConsensusMsg, msgHash com
 			log.Infof("server %d, response blockinfo fetch to %d, blk %d, len %d",
 				self.Index, peerIdx, pMsg.StartBlockNum, len(blkInfos))
 			self.msgSendC <- &SendMsgEvent{
-				ToPeer: peerIdx,
+				ToPeer: math.MaxUint32,
 				Msg:    msg,
 			}
 		}

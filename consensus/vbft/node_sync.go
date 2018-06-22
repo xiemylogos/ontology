@@ -21,6 +21,7 @@ package vbft
 import (
 	"encoding/hex"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -400,7 +401,7 @@ func (self *PeerSyncer) requestBlock(blkNum uint32) (*Block, error) {
 		return nil, err
 	}
 	self.server.msgSendC <- &SendMsgEvent{
-		ToPeer: self.peerIdx,
+		ToPeer: math.MaxUint32,
 		Msg:    msg,
 	}
 
@@ -435,7 +436,7 @@ func (self *PeerSyncer) requestBlockInfo(startBlkNum uint32) ([]*BlockInfo_, err
 	}
 
 	self.server.msgSendC <- &SendMsgEvent{
-		ToPeer: self.peerIdx,
+		ToPeer: math.MaxUint32,
 		Msg:    msg,
 	}
 
