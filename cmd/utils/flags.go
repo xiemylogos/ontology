@@ -20,11 +20,12 @@ package utils
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/ontio/ontology/common/config"
 	"github.com/ontio/ontology/common/constants"
 	"github.com/ontio/ontology/smartcontract/service/neovm"
 	"github.com/urfave/cli"
-	"strings"
 )
 
 const (
@@ -80,6 +81,11 @@ var (
 		Usage: "Using maxtxinblock to set the max transaction number in block",
 		Value: config.DEFAULT_MAX_TX_IN_BLOCK,
 	}
+	ParallelDeserializeTxCountFlag = cli.IntFlag{
+		Name:  "paralleldeserializetxcount",
+		Usage: "Transaction count in one block to trigger parallel deserialization",
+		Value: config.DEFAULT_PARALLEL_DES_TX,
+	}
 	GasLimitFlag = cli.Uint64Flag{
 		Name:  "gaslimit",
 		Usage: "Using to set the gaslimit of the current node transaction pool to accept transactions. Transactions below this gaslimit will be discarded",
@@ -90,7 +96,6 @@ var (
 		Usage: "Using to set the lowest gasprice of the current node transaction pool to accept transactions. Transactions below this gasprice will be discarded",
 		Value: config.DEFAULT_GAS_PRICE,
 	}
-
 	//Test Mode setting
 	EnableTestModeFlag = cli.BoolFlag{
 		Name:  "testmode",

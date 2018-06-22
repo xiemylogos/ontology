@@ -88,6 +88,7 @@ func setupAPP() *cli.App {
 		//consensus setting
 		utils.DisableConsensusFlag,
 		utils.MaxTxInBlockFlag,
+		utils.ParallelDeserializeTxCountFlag,
 		//txpool setting
 		utils.GasPriceFlag,
 		utils.GasLimitFlag,
