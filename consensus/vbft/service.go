@@ -204,6 +204,14 @@ func (self *Server) handleBlockPersistCompleted(block *types.Block) {
 
 	if block.Header.Height > self.completedBlockNum {
 		self.completedBlockNum = block.Header.Height
+		if self.nonConsensusNode() {
+			self.chainStore.ReloadFromLedger()
+			self.metaLock.Lock()
+			if self.currentBlockNum < self.GetCommittedBlockNo() {
+				self.currentBlockNum = self.GetCommittedBlockNo() + 1
+			}
+			self.metaLock.Unlock()
+		}
 	} else {
 		log.Errorf("server %d, persist block %d, vs completed %d",
 			self.Index, block.Header.Height, self.completedBlockNum)
