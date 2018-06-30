@@ -107,6 +107,7 @@ type Server struct {
 	metaLock                 sync.RWMutex
 	completedBlockNum        uint32 // ledger SaveBlockCompleted block num
 	currentBlockNum          uint32
+	LastConfigBlockNum       uint32
 	config                   *vconfig.ChainConfig
 	currentParticipantConfig *BlockParticipantConfig
 
@@ -260,6 +261,7 @@ func (self *Server) LoadChainConfig(chainStore *ChainStore) error {
 	var cfg vconfig.ChainConfig
 	if block.getNewChainConfig() != nil {
 		cfg = *block.getNewChainConfig()
+		self.LastConfigBlockNum = block.getLastConfigBlockNum()
 	} else {
 		cfgBlock := block
 		if block.getLastConfigBlockNum() != math.MaxUint32 {
@@ -272,6 +274,7 @@ func (self *Server) LoadChainConfig(chainStore *ChainStore) error {
 			panic("failed to get chain config from config block")
 		}
 		cfg = *cfgBlock.getNewChainConfig()
+		self.LastConfigBlockNum = cfgBlock.getLastConfigBlockNum()
 	}
 	self.metaLock.Lock()
 	self.config = &cfg
@@ -327,6 +330,7 @@ func (self *Server) updateChainConfig() error {
 	log.Infof("updateChainConfig blkNum:%d", self.completedBlockNum)
 	self.metaLock.Lock()
 	self.config = block.Info.NewChainConfig
+	self.LastConfigBlockNum = block.getLastConfigBlockNum()
 	self.metaLock.Unlock()
 
 	self.metaLock.RLock()
@@ -1053,6 +1057,12 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 		log.Errorf("BlockPrposalMessage check blocknum:%d,prevhash:%s,msg prevhash:%s", msg.GetBlockNum(), prevBlkHash.ToHexString(), msgPrevBlkHash.ToHexString())
 		return
 	}
+
+	if self.LastConfigBlockNum != math.MaxUint32 && blk.Info.LastConfigBlockNum != self.LastConfigBlockNum {
+		log.Errorf("BlockPrposalMessage  check LastConfigBlockNum blocknum:%d,prvLastConfigBlockNum:%d,self LastConfigBlockNum:%d", msg.GetBlockNum(), blk.Info.LastConfigBlockNum, self.LastConfigBlockNum)
+		return
+	}
+
 	cfg := vconfig.ChainConfig{}
 	if blk.getNewChainConfig() != nil {
 		cfg = *blk.getNewChainConfig()
