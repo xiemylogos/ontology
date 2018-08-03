@@ -21,9 +21,12 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -181,6 +184,13 @@ func startOntology(ctx *cli.Context) {
 	initWs(ctx)
 	initNodeInfo(ctx, p2pSvr)
 
+	go func() {
+		http.HandleFunc("/goroutines", func(w http.ResponseWriter, r *http.Request) {
+			num := strconv.FormatInt(int64(runtime.NumGoroutine()), 10)
+			w.Write([]byte(num))
+		})
+		http.ListenAndServe("0.0.0.0:20770", nil)
+	}()
 	go logCurrBlockHeight()
 	waitToExit()
 }
