@@ -1091,7 +1091,10 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 			self.Index, msgBlkNum, msg.Block.getProposer())
 		return
 	}
-
+	if self.completedBlockNum != 0 && self.completedBlockNum >= msg.GetBlockNum() {
+		log.Infof("msg have save block num:%d msg type:%d,compelete:%d", msg.GetBlockNum(), msg.Type(), self.completedBlockNum)
+		return
+	}
 	txs := msg.Block.Block.Transactions
 	if len(txs) > 0 && self.nonSystxs(txs, msgBlkNum) {
 		height := uint32(msgBlkNum) - 1

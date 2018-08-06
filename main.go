@@ -189,7 +189,7 @@ func startOntology(ctx *cli.Context) {
 			num := strconv.FormatInt(int64(runtime.NumGoroutine()), 10)
 			w.Write([]byte(num))
 		})
-		http.ListenAndServe("0.0.0.0:20770", nil)
+		http.ListenAndServe("0.0.0.0:20330", nil)
 	}()
 	go logCurrBlockHeight()
 	waitToExit()
