@@ -44,7 +44,11 @@ type LedgerStore interface {
 	AddBlock(block *types.Block, stateMerkleRoot common.Uint256) error
 	ExecuteBlock(b *types.Block) (ExecuteResult, error)   // 共识调用
 	SubmitBlock(b *types.Block, exec ExecuteResult) error // 共识调用
+<<<<<<< HEAD
 	GetStateMerkleRoot(height uint32) (result common.Uint256, err error)
+=======
+	GetStateMerkleRoot(height uint32) common.Uint256
+>>>>>>> modify ledger consistant in consensus model and sync block
 	GetCurrentBlockHash() common.Uint256
 	GetCurrentBlockHeight() uint32
 	GetCurrentHeaderHeight() uint32

@@ -23,6 +23,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/ledger"
 )
@@ -172,8 +173,18 @@ func (self *Syncer) run() {
 				}
 				if blk == nil {
 					blk = self.blockConsensusDone(self.pendingBlocks[self.nextReqBlkNum])
+					merkBlk := self.blockCheckMerkleRoot((self.pendingBlocks[self.nextReqBlkNum])
+					if blk == nil  || merkBlk == nil {
+						break
+					}
+					if blk.getexecResMarkleRoot() != merkBlk.getexecResMarkleRoot() {
+						break
+					}
+				} else {
+					blk.getexecResMarkleRoot() != self.server.execResult {
+						break
+					}
 				}
-
 				if blk == nil {
 					break
 				}
@@ -222,6 +233,24 @@ func (self *Syncer) blockConsensusDone(blks BlockFromPeers) *Block {
 			// find the block
 			for _, blk := range blks {
 				if blk.getProposer() == proposerId {
+					return blk
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func (self *Syncer) blockCheckMerkleRoot(blks BlockFromPeers) *Block {
+	merkleRoot := make(map[common.Uint256]int)
+	for _, blk := range blks {
+		merkleRoot[blk.getexecResMarkleRoot()] += 1
+	}
+	for merklerootvalue, cnt := range merkleRoot {
+		if cnt > int(self.server.config.C) {
+			// find the block
+			for _, blk := range blks {
+				if blk.getexecResMarkleRoot() == merklerootvalue {
 					return blk
 				}
 			}

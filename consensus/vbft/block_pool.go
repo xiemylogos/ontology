@@ -656,7 +656,7 @@ func (pool *BlockPool) setBlockSealed(block *Block, forEmpty bool) error {
 	}
 
 	// add block to chain store
-	if err := pool.chainStore.AddBlock(c.SealedBlock); err != nil {
+	if err := pool.chainStore.AddBlock(c.SealedBlock, pool.server); err != nil {
 		return fmt.Errorf("failed to seal block (%d) to chainstore: %s", blkNum, err)
 	}
 

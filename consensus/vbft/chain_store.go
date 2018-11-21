@@ -65,7 +65,7 @@ func (self *ChainStore) ReloadFromLedger() {
 	}
 }
 
-func (self *ChainStore) AddBlock(block *Block) error {
+func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 	if block == nil {
 		return fmt.Errorf("try add nil block")
 	}
@@ -85,10 +85,18 @@ func (self *ChainStore) AddBlock(block *Block) error {
 		if blk, present := self.pendingBlocks[blkNum]; blk != nil && present {
 			log.Infof("ledger adding chained block (%d, %d)", blkNum, self.GetChainedBlockNum())
 
-			err := self.db.AddBlock(blk.Block)
+			//err := self.db.AddBlock(blk.Block)
+			err := self.db.SubmitBlock(blk.Block, server.execResult)
 			if err != nil && blkNum > self.GetChainedBlockNum() {
 				return fmt.Errorf("ledger add blk (%d, %d) failed: %s", blkNum, self.GetChainedBlockNum(), err)
 			}
+			execResult, err := server.chainStore.ExecuteBlock(blk.Block)
+			if err != nil {
+				log.Errorf("chainstore AddBlock GetBlockExecResult: %s", err)
+				eturn fmt.Errorf("GetBlockExecResult: %s", err)
+			}
+			server.merkleRoot = execResult.MerkleRoot
+			server.handleBlockPersistCompleted(blk.Block)
 
 			self.chainedBlockNum = blkNum
 			if blkNum != self.db.GetCurrentBlockHeight() {
