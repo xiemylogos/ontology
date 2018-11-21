@@ -36,6 +36,7 @@ import (
 	"github.com/ontio/ontology/consensus/vbft/config"
 	"github.com/ontio/ontology/core/ledger"
 	"github.com/ontio/ontology/core/payload"
+	"github.com/ontio/ontology/core/store"
 	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/core/utils"
 	"github.com/ontio/ontology/events"
@@ -124,6 +125,7 @@ type Server struct {
 	bftActionC chan *BftAction
 	msgSendC   chan *SendMsgEvent
 	sub        *events.ActorSubscriber
+	execResult *store.ExecuteResult
 	merkleRoot common.Uint256
 	quitC      chan struct{}
 	quit       bool
@@ -138,6 +140,7 @@ func NewVbftServer(account *account.Account, txpool, p2p *actor.PID) (*Server, e
 		p2p:                &actorTypes.P2PActor{P2P: p2p},
 		ledger:             ledger.DefLedger,
 		incrValidator:      increment.NewIncrementValidator(10),
+		execResult:         &store.ExecuteResult{},
 	}
 	server.stateMgr = newStateMgr(server)
 
@@ -442,7 +445,7 @@ func (self *Server) initialize() error {
 		log.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
 		return fmt.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
 	}
-	self.merkleRoot = merkleRoot
+	self.execResult.MerkleRoot = merkleRoot
 	log.Infof("chain config loaded from local, current blockNum: %d", self.GetCurrentBlockNo())
 
 	// add all consensus peers to peer_pool
@@ -1071,8 +1074,10 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 		log.Errorf("BlockPrposalMessage  check LastConfigBlockNum blocknum:%d,prvLastConfigBlockNum:%d,self LastConfigBlockNum:%d", msg.GetBlockNum(), blk.Info.LastConfigBlockNum, self.LastConfigBlockNum)
 		return
 	}
-	if msg.getexecResMarkleRoot() != self.merkleRoot {
-		log.Errorf("BlockPrposalMessage check MerkleRoot blocknum:%d,msg MerkleRoot:%s,self MerkleRoot:%s", msg.GetBlockNum(), msg.getexecResMarkleRoot().ToHexString(), self.execResult.MerkleRoot.ToHexString())
+	if msg.Block.getexecResMarkleRoot() != self.execResult.MerkleRoot {
+		msgMerkleRoot := msg.Block.getexecResMarkleRoot()
+		merkRoot := self.execResult.MerkleRoot
+		log.Errorf("BlockPrposalMessage check MerkleRoot blocknum:%d,msg MerkleRoot:%s,self MerkleRoot:%s", msg.GetBlockNum(), msgMerkleRoot.ToHexString(), merkRoot.ToHexString())
 		return
 	}
 	cfg := vconfig.ChainConfig{}

@@ -21,7 +21,6 @@ package vbft
 import (
 	"fmt"
 
-	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/ledger"
 )
@@ -86,16 +85,16 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 			log.Infof("ledger adding chained block (%d, %d)", blkNum, self.GetChainedBlockNum())
 
 			//err := self.db.AddBlock(blk.Block)
-			err := self.db.SubmitBlock(blk.Block, server.execResult)
+			err := self.db.SubmitBlock(blk.Block, *server.execResult)
 			if err != nil && blkNum > self.GetChainedBlockNum() {
 				return fmt.Errorf("ledger add blk (%d, %d) failed: %s", blkNum, self.GetChainedBlockNum(), err)
 			}
-			execResult, err := server.chainStore.ExecuteBlock(blk.Block)
+			execResult, err := self.db.ExecuteBlock(blk.Block)
 			if err != nil {
 				log.Errorf("chainstore AddBlock GetBlockExecResult: %s", err)
 				return fmt.Errorf("GetBlockExecResult: %s", err)
 			}
-			server.merkleRoot = execResult.MerkleRoot
+			server.execResult = &execResult
 			server.handleBlockPersistCompleted(blk.Block)
 
 			self.chainedBlockNum = blkNum
@@ -117,6 +116,7 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 //
 // SetBlock is used when recovering from fork-chain
 //
+/*
 func (self *ChainStore) SetBlock(block *Block, blockHash common.Uint256) error {
 
 	err := self.db.AddBlock(block.Block, common.Uint256{})
@@ -127,7 +127,7 @@ func (self *ChainStore) SetBlock(block *Block, blockHash common.Uint256) error {
 
 	return nil
 }
-
+*/
 func (self *ChainStore) GetBlock(blockNum uint32) (*Block, error) {
 
 	if blk, present := self.pendingBlocks[blockNum]; present {

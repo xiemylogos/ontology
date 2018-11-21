@@ -181,7 +181,7 @@ func (self *Syncer) run() {
 						break
 					}
 				} else {
-					if blk.getexecResMarkleRoot() != self.server.execResult {
+					if blk.getexecResMarkleRoot() != self.server.execResult.MerkleRoot {
 						break
 					}
 				}
