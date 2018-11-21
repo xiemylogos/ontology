@@ -93,7 +93,7 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 			execResult, err := server.chainStore.ExecuteBlock(blk.Block)
 			if err != nil {
 				log.Errorf("chainstore AddBlock GetBlockExecResult: %s", err)
-				eturn fmt.Errorf("GetBlockExecResult: %s", err)
+				return fmt.Errorf("GetBlockExecResult: %s", err)
 			}
 			server.merkleRoot = execResult.MerkleRoot
 			server.handleBlockPersistCompleted(blk.Block)
@@ -119,7 +119,7 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 //
 func (self *ChainStore) SetBlock(block *Block, blockHash common.Uint256) error {
 
-	err := self.db.AddBlock(block.Block)
+	err := self.db.AddBlock(block.Block, common.Uint256{})
 	self.chainedBlockNum = self.db.GetCurrentBlockHeight()
 	if err != nil {
 		return fmt.Errorf("ledger failed to add block: %s", err)

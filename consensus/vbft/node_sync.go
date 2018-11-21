@@ -173,15 +173,15 @@ func (self *Syncer) run() {
 				}
 				if blk == nil {
 					blk = self.blockConsensusDone(self.pendingBlocks[self.nextReqBlkNum])
-					merkBlk := self.blockCheckMerkleRoot((self.pendingBlocks[self.nextReqBlkNum])
-					if blk == nil  || merkBlk == nil {
+					merkBlk := self.blockCheckMerkleRoot(self.pendingBlocks[self.nextReqBlkNum])
+					if blk == nil || merkBlk == nil {
 						break
 					}
 					if blk.getexecResMarkleRoot() != merkBlk.getexecResMarkleRoot() {
 						break
 					}
 				} else {
-					blk.getexecResMarkleRoot() != self.server.execResult {
+					if blk.getexecResMarkleRoot() != self.server.execResult {
 						break
 					}
 				}

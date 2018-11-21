@@ -21,8 +21,12 @@ package cmd
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"os"
+
 	"github.com/gosuri/uiprogress"
 	"github.com/ontio/ontology/cmd/utils"
+	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/common/serialization"
@@ -30,8 +34,6 @@ import (
 	"github.com/ontio/ontology/core/ledger"
 	"github.com/ontio/ontology/core/types"
 	"github.com/urfave/cli"
-	"io"
-	"os"
 )
 
 var ImportCommand = cli.Command{
@@ -157,7 +159,7 @@ func importBlocks(ctx *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("block height:%d deserialize error:%s", i, err)
 		}
-		err = ledger.DefLedger.AddBlock(block)
+		err = ledger.DefLedger.AddBlock(block, common.Uint256{})
 		if err != nil {
 			return fmt.Errorf("add block height:%d error:%s", i, err)
 		}

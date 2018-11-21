@@ -258,7 +258,7 @@ func (self *Server) constructProposalMsg(blkNum uint32, sysTxs, userTxs []*types
 			Block:      blk,
 			EmptyBlock: emptyBlk,
 			Info:       vbftBlkInfo,
-			MerkleRoot: common.Uint256
+			MerkleRoot: common.Uint256{},
 		},
 	}
 

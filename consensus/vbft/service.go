@@ -437,8 +437,12 @@ func (self *Server) initialize() error {
 		log.Errorf("failed to load config: %s", err)
 		return fmt.Errorf("failed to load config: %s", err)
 	}
-	merkleRoot := store.GetStateMerkleRoot(self.LastConfigBlockNum)
-	this.merkleRoot = merkleRoot
+	merkleRoot, err := self.ledger.GetStateMerkleRoot(self.LastConfigBlockNum)
+	if err != nil {
+		log.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
+		return fmt.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
+	}
+	self.merkleRoot = merkleRoot
 	log.Infof("chain config loaded from local, current blockNum: %d", self.GetCurrentBlockNo())
 
 	// add all consensus peers to peer_pool
