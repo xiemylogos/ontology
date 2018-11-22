@@ -120,16 +120,17 @@ type Server struct {
 	stateMgr   *StateMgr
 	timer      *EventTimer
 
-	msgRecvC   map[uint32]chan *p2pMsgPayload
-	msgC       chan ConsensusMsg
-	bftActionC chan *BftAction
-	msgSendC   chan *SendMsgEvent
-	sub        *events.ActorSubscriber
-	execResult *store.ExecuteResult
-	merkleRoot common.Uint256
-	quitC      chan struct{}
-	quit       bool
-	quitWg     sync.WaitGroup
+	msgRecvC        map[uint32]chan *p2pMsgPayload
+	msgC            chan ConsensusMsg
+	bftActionC      chan *BftAction
+	msgSendC        chan *SendMsgEvent
+	sub             *events.ActorSubscriber
+	execResult      *store.ExecuteResult
+	needSubmitBlock bool
+	merkleRoot      common.Uint256
+	quitC           chan struct{}
+	quit            bool
+	quitWg          sync.WaitGroup
 }
 
 func NewVbftServer(account *account.Account, txpool, p2p *actor.PID) (*Server, error) {
@@ -141,6 +142,7 @@ func NewVbftServer(account *account.Account, txpool, p2p *actor.PID) (*Server, e
 		ledger:             ledger.DefLedger,
 		incrValidator:      increment.NewIncrementValidator(10),
 		execResult:         &store.ExecuteResult{},
+		needSubmitBlock:    false,
 	}
 	server.stateMgr = newStateMgr(server)
 
@@ -446,6 +448,7 @@ func (self *Server) initialize() error {
 		return fmt.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
 	}
 	self.execResult.MerkleRoot = merkleRoot
+	self.needSubmitBlock = false
 	log.Infof("chain config loaded from local, current blockNum: %d", self.GetCurrentBlockNo())
 
 	// add all consensus peers to peer_pool

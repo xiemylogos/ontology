@@ -85,9 +85,13 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 			log.Infof("ledger adding chained block (%d, %d)", blkNum, self.GetChainedBlockNum())
 
 			//err := self.db.AddBlock(blk.Block)
-			err := self.db.SubmitBlock(blk.Block, *server.execResult)
-			if err != nil && blkNum > self.GetChainedBlockNum() {
-				return fmt.Errorf("ledger add blk (%d, %d) failed: %s", blkNum, self.GetChainedBlockNum(), err)
+			var err error
+			if server.needSubmitBlock {
+				err := self.db.SubmitBlock(blk.Block, *server.execResult)
+				if err != nil && blkNum > self.GetChainedBlockNum() {
+					return fmt.Errorf("ledger add blk (%d, %d) failed: %s", blkNum, self.GetChainedBlockNum(), err)
+				}
+				server.needSubmitBlock = false
 			}
 			execResult, err := self.db.ExecuteBlock(blk.Block)
 			if err != nil {
@@ -95,6 +99,7 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 				return fmt.Errorf("GetBlockExecResult: %s", err)
 			}
 			server.execResult = &execResult
+			server.needSubmitBlock = true
 			server.handleBlockPersistCompleted(blk.Block)
 
 			self.chainedBlockNum = blkNum
