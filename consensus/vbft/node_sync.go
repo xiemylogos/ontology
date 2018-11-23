@@ -177,11 +177,11 @@ func (self *Syncer) run() {
 					if blk == nil || merkBlk == nil {
 						break
 					}
-					if blk.getexecResMarkleRoot() != merkBlk.getexecResMarkleRoot() {
+					if blk.getexecResMerkleRoot() != merkBlk.getexecResMerkleRoot() {
 						break
 					}
 				} else {
-					if blk.getexecResMarkleRoot() != self.server.execResult.MerkleRoot {
+					if blk.getexecResMerkleRoot() != self.server.chainStore.execResult.MerkleRoot {
 						break
 					}
 				}
@@ -244,13 +244,13 @@ func (self *Syncer) blockConsensusDone(blks BlockFromPeers) *Block {
 func (self *Syncer) blockCheckMerkleRoot(blks BlockFromPeers) *Block {
 	merkleRoot := make(map[common.Uint256]int)
 	for _, blk := range blks {
-		merkleRoot[blk.getexecResMarkleRoot()] += 1
+		merkleRoot[blk.getexecResMerkleRoot()] += 1
 	}
 	for merklerootvalue, cnt := range merkleRoot {
 		if cnt > int(self.server.config.C) {
 			// find the block
 			for _, blk := range blks {
-				if blk.getexecResMarkleRoot() == merklerootvalue {
+				if blk.getexecResMerkleRoot() == merklerootvalue {
 					return blk
 				}
 			}

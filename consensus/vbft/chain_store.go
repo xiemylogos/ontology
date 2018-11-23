@@ -23,12 +23,15 @@ import (
 
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/ledger"
+	"github.com/ontio/ontology/core/store"
 )
 
 type ChainStore struct {
 	db              *ledger.Ledger
 	chainedBlockNum uint32
 	pendingBlocks   map[uint32]*Block
+	execResult      *store.ExecuteResult
+	needSubmitBlock bool
 }
 
 func OpenBlockStore(db *ledger.Ledger) (*ChainStore, error) {
@@ -36,6 +39,8 @@ func OpenBlockStore(db *ledger.Ledger) (*ChainStore, error) {
 		db:              db,
 		chainedBlockNum: db.GetCurrentBlockHeight(),
 		pendingBlocks:   make(map[uint32]*Block),
+		execResult:      &store.ExecuteResult{},
+		needSubmitBlock: false,
 	}, nil
 }
 
@@ -86,13 +91,13 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 
 			//err := self.db.AddBlock(blk.Block)
 			var err error
-			if server.needSubmitBlock {
+			if self.needSubmitBlock {
 				if submitBlk, present := self.pendingBlocks[blkNum-1]; submitBlk != nil && present {
-					err := self.db.SubmitBlock(submitBlk.Block, *server.execResult)
+					err := self.db.SubmitBlock(submitBlk.Block, *self.execResult)
 					if err != nil && blkNum > self.GetChainedBlockNum() {
 						return fmt.Errorf("ledger add submitBlk (%d, %d) failed: %s", blkNum, self.GetChainedBlockNum(), err)
 					}
-					server.needSubmitBlock = false
+					self.needSubmitBlock = false
 					delete(self.pendingBlocks, blkNum-1)
 				} else {
 					break
@@ -103,8 +108,8 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 				log.Errorf("chainstore AddBlock GetBlockExecResult: %s", err)
 				return fmt.Errorf("GetBlockExecResult: %s", err)
 			}
-			server.execResult = &execResult
-			server.needSubmitBlock = true
+			self.execResult = &execResult
+			self.needSubmitBlock = true
 			server.handleBlockPersistCompleted(blk.Block)
 
 			self.chainedBlockNum = blkNum

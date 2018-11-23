@@ -57,7 +57,7 @@ func (blk *Block) getNewChainConfig() *vconfig.ChainConfig {
 	return blk.Info.NewChainConfig
 }
 
-func (blk *Block) getexecResMarkleRoot() common.Uint256 {
+func (blk *Block) getexecResMerkleRoot() common.Uint256 {
 	return blk.MerkleRoot
 }
 
