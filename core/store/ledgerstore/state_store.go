@@ -46,25 +46,27 @@ var (
 
 //StateStore saving the data of ledger states. Like balance of account, and the execution result of smart contract
 type StateStore struct {
-	dbDir           string                    //Store file path
-	store           scom.PersistStore         //Store handler
-	merklePath      string                    //Merkle tree store path
-	merkleTree      *merkle.CompactMerkleTree //Merkle tree of block root
-	stateMerkleTree *merkle.CompactMerkleTree //Merkle tree of state root
-	merkleHashStore merkle.HashStore
+	dbDir              string                    //Store file path
+	store              scom.PersistStore         //Store handler
+	merklePath         string                    //Merkle tree store path
+	merkleTree         *merkle.CompactMerkleTree //Merkle tree of block root
+	stateMerkleTree    *merkle.CompactMerkleTree //Merkle tree of state root
+	merkleHashStore    merkle.HashStore
+	effStateHashHeight uint32
 }
 
 //NewStateStore return state store instance
-func NewStateStore(dbDir, merklePath string) (*StateStore, error) {
+func NewStateStore(dbDir, merklePath string, effStateHashHeight uint32) (*StateStore, error) {
 	var err error
 	store, err := leveldbstore.NewLevelDBStore(dbDir)
 	if err != nil {
 		return nil, err
 	}
 	stateStore := &StateStore{
-		dbDir:      dbDir,
-		store:      store,
-		merklePath: merklePath,
+		dbDir:              dbDir,
+		store:              store,
+		merklePath:         merklePath,
+		effStateHashHeight: effStateHashHeight,
 	}
 	_, height, err := stateStore.GetCurrentBlock()
 	if err != nil && err != scom.ErrNotFound {
@@ -75,6 +77,19 @@ func NewStateStore(dbDir, merklePath string) (*StateStore, error) {
 		return nil, fmt.Errorf("init error %s", err)
 	}
 	return stateStore, nil
+}
+
+// for test
+func NewMemStateStore(stateHashHeight uint32) *StateStore {
+	store, _ := leveldbstore.NewMemLevelDBStore()
+	stateStore := &StateStore{
+		store:              store,
+		merkleTree:         merkle.NewTree(0, nil, nil),
+		stateMerkleTree:    merkle.NewTree(0, nil, nil),
+		effStateHashHeight: stateHashHeight,
+	}
+
+	return stateStore
 }
 
 //NewBatch start new commit batch
@@ -104,12 +119,12 @@ func (self *StateStore) init(currBlockHeight uint32) error {
 	}
 	self.merkleTree = merkle.NewTree(treeSize, hashes, self.merkleHashStore)
 
-	if currBlockHeight >= STATE_HASH_HEIGHT {
+	if currBlockHeight >= self.effStateHashHeight {
 		treeSize, hashes, err := self.GetStateMerkleTree()
 		if err != nil && err != scom.ErrNotFound {
 			return err
 		}
-		if treeSize > 0 && treeSize != currBlockHeight-STATE_HASH_HEIGHT+1 {
+		if treeSize > 0 && treeSize != currBlockHeight-self.effStateHashHeight+1 {
 			return fmt.Errorf("merkle tree size is inconsistent with blockheight: %d", currBlockHeight+1)
 		}
 		self.stateMerkleTree = merkle.NewTree(treeSize, hashes, nil)
@@ -152,6 +167,9 @@ func (self *StateStore) getMerkleTree(key []byte) (uint32, []common.Uint256, err
 }
 
 func (self *StateStore) GetStateMerkleRoot(height uint32) (result common.Uint256, err error) {
+	if height < self.effStateHashHeight {
+		return
+	}
 	key := self.genStateMerkleRootKey(height)
 	var value []byte
 	value, err = self.store.Get(key)
@@ -168,9 +186,9 @@ func (self *StateStore) GetStateMerkleRoot(height uint32) (result common.Uint256
 }
 
 func (self *StateStore) AddStateMerkleTreeRoot(blockHeight uint32, writeSetHash common.Uint256) error {
-	if blockHeight < STATE_HASH_HEIGHT {
+	if blockHeight < self.effStateHashHeight {
 		return nil
-	} else if blockHeight == STATE_HASH_HEIGHT {
+	} else if blockHeight == self.effStateHashHeight {
 		self.stateMerkleTree = merkle.NewTree(0, nil, nil)
 	}
 	key := self.genStateMerkleTreeKey()
@@ -401,6 +419,7 @@ func (self *StateStore) ClearAll() error {
 
 //Close state store
 func (self *StateStore) Close() error {
+	self.merkleHashStore.Close()
 	return self.store.Close()
 }
 

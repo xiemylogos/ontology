@@ -104,7 +104,7 @@ func NewLedgerStore(dataDir string) (*LedgerStoreImp, error) {
 	ledgerStore.blockStore = blockStore
 
 	stateStore, err := NewStateStore(fmt.Sprintf("%s%s%s", dataDir, string(os.PathSeparator), DBDirState),
-		fmt.Sprintf("%s%s%s", dataDir, string(os.PathSeparator), MerkleTreeStorePath))
+		fmt.Sprintf("%s%s%s", dataDir, string(os.PathSeparator), MerkleTreeStorePath), STATE_HASH_HEIGHT)
 	if err != nil {
 		return nil, fmt.Errorf("NewStateStore error %s", err)
 	}
