@@ -124,6 +124,7 @@ type Server struct {
 	bftActionC chan *BftAction
 	msgSendC   chan *SendMsgEvent
 	sub        *events.ActorSubscriber
+	merkleRoot common.Uint256
 	quitC      chan struct{}
 	quit       bool
 	quitWg     sync.WaitGroup
@@ -173,10 +174,12 @@ func (self *Server) Receive(context actor.Context) {
 		log.Info("vbft actor start consensus")
 	case *actorTypes.StopConsensus:
 		self.stop()
-	case *message.SaveBlockCompleteMsg:
-		log.Infof("vbft actor receives block complete event. block height=%d, numtx=%d",
-			msg.Block.Header.Height, len(msg.Block.Transactions))
-		self.handleBlockPersistCompleted(msg.Block)
+	/*
+		case *message.SaveBlockCompleteMsg:
+			log.Infof("vbft actor receives block complete event. block height=%d, numtx=%d",
+				msg.Block.Header.Height, len(msg.Block.Transactions))
+			self.handleBlockPersistCompleted(msg.Block)
+	*/
 	case *p2pmsg.ConsensusPayload:
 		self.NewConsensusPayload(msg)
 
@@ -205,6 +208,7 @@ func (self *Server) handleBlockPersistCompleted(block *types.Block) {
 
 	if block.Header.Height > self.completedBlockNum {
 		self.completedBlockNum = block.Header.Height
+
 		if self.nonConsensusNode() {
 			self.chainStore.ReloadFromLedger()
 			self.metaLock.Lock()
@@ -433,6 +437,13 @@ func (self *Server) initialize() error {
 		log.Errorf("failed to load config: %s", err)
 		return fmt.Errorf("failed to load config: %s", err)
 	}
+	merkleRoot, err := self.ledger.GetStateMerkleRoot(self.LastConfigBlockNum)
+	if err != nil {
+		log.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
+		return fmt.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
+	}
+	self.chainStore.execResult.MerkleRoot = merkleRoot
+	self.chainStore.needSubmitBlock = false
 	log.Infof("chain config loaded from local, current blockNum: %d", self.GetCurrentBlockNo())
 
 	// add all consensus peers to peer_pool
@@ -1061,7 +1072,12 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 		log.Errorf("BlockPrposalMessage  check LastConfigBlockNum blocknum:%d,prvLastConfigBlockNum:%d,self LastConfigBlockNum:%d", msg.GetBlockNum(), blk.Info.LastConfigBlockNum, self.LastConfigBlockNum)
 		return
 	}
-
+	if msg.Block.getexecResMerkleRoot() != self.chainStore.execResult.MerkleRoot {
+		msgMerkleRoot := msg.Block.getexecResMerkleRoot()
+		merkRoot := self.chainStore.execResult.MerkleRoot
+		log.Errorf("BlockPrposalMessage check MerkleRoot blocknum:%d,msg MerkleRoot:%s,self MerkleRoot:%s", msg.GetBlockNum(), msgMerkleRoot.ToHexString(), merkRoot.ToHexString())
+		return
+	}
 	cfg := vconfig.ChainConfig{}
 	if blk.getNewChainConfig() != nil {
 		cfg = *blk.getNewChainConfig()

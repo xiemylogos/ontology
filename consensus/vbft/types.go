@@ -22,18 +22,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/serialization"
 	vconfig "github.com/ontio/ontology/consensus/vbft/config"
 	"github.com/ontio/ontology/core/types"
-	"io"
 )
 
 type Block struct {
 	Block      *types.Block
 	EmptyBlock *types.Block
 	Info       *vconfig.VbftBlockInfo
+	MerkleRoot common.Uint256
 }
 
 func (blk *Block) getProposer() uint32 {
@@ -54,6 +55,10 @@ func (blk *Block) getLastConfigBlockNum() uint32 {
 
 func (blk *Block) getNewChainConfig() *vconfig.ChainConfig {
 	return blk.Info.NewChainConfig
+}
+
+func (blk *Block) getexecResMerkleRoot() common.Uint256 {
+	return blk.MerkleRoot
 }
 
 //
