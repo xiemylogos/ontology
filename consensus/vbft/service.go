@@ -36,6 +36,7 @@ import (
 	"github.com/ontio/ontology/consensus/vbft/config"
 	"github.com/ontio/ontology/core/ledger"
 	"github.com/ontio/ontology/core/payload"
+	"github.com/ontio/ontology/core/store/overlaydb"
 	"github.com/ontio/ontology/core/types"
 	"github.com/ontio/ontology/core/utils"
 	"github.com/ontio/ontology/events"
@@ -174,12 +175,10 @@ func (self *Server) Receive(context actor.Context) {
 		log.Info("vbft actor start consensus")
 	case *actorTypes.StopConsensus:
 		self.stop()
-	/*
-		case *message.SaveBlockCompleteMsg:
-			log.Infof("vbft actor receives block complete event. block height=%d, numtx=%d",
-				msg.Block.Header.Height, len(msg.Block.Transactions))
-			self.handleBlockPersistCompleted(msg.Block)
-	*/
+	case *message.BlockConsensusComplete:
+		log.Infof("vbft actor receives block complete event. block height=%d, numtx=%d",
+			msg.Block.Header.Height, len(msg.Block.Transactions))
+		self.handleBlockPersistCompleted(msg.Block)
 	case *p2pmsg.ConsensusPayload:
 		self.NewConsensusPayload(msg)
 
@@ -437,12 +436,14 @@ func (self *Server) initialize() error {
 		log.Errorf("failed to load config: %s", err)
 		return fmt.Errorf("failed to load config: %s", err)
 	}
-	merkleRoot, err := self.ledger.GetStateMerkleRoot(self.LastConfigBlockNum)
+	merkleRoot, err := self.ledger.GetStateMerkleRoot(store.GetChainedBlockNum())
 	if err != nil {
-		log.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
-		return fmt.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", self.LastConfigBlockNum, err)
+		log.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", store.GetChainedBlockNum(), err)
+		return fmt.Errorf("GetStateMerkleRoot blockNum:%d, error :%s", store.GetChainedBlockNum(), err)
 	}
-	self.chainStore.execResult.MerkleRoot = merkleRoot
+	self.chainStore.SetExecMerkeRoot(merkleRoot)
+	writeSet := overlaydb.NewMemDB(1, 1)
+	self.chainStore.SetExecWriteSet(writeSet)
 	self.chainStore.needSubmitBlock = false
 	log.Infof("chain config loaded from local, current blockNum: %d", self.GetCurrentBlockNo())
 
@@ -470,7 +471,6 @@ func (self *Server) initialize() error {
 		self.Index = math.MaxUint32
 	}
 
-	self.sub.Subscribe(message.TOPIC_SAVE_BLOCK_COMPLETE)
 	go self.syncer.run()
 	go self.stateMgr.run()
 	go self.msgSendLoop()
@@ -532,7 +532,6 @@ func (self *Server) start() error {
 func (self *Server) stop() error {
 
 	self.incrValidator.Clean()
-	self.sub.Unsubscribe(message.TOPIC_SAVE_BLOCK_COMPLETE)
 
 	// stop syncer, statemgr, msgSendLoop, timer, actionLoop, msgProcessingLoop
 	self.quit = true
@@ -1072,9 +1071,9 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 		log.Errorf("BlockPrposalMessage  check LastConfigBlockNum blocknum:%d,prvLastConfigBlockNum:%d,self LastConfigBlockNum:%d", msg.GetBlockNum(), blk.Info.LastConfigBlockNum, self.LastConfigBlockNum)
 		return
 	}
-	if msg.Block.getexecResMerkleRoot() != self.chainStore.execResult.MerkleRoot {
+	if msg.Block.getexecResMerkleRoot() != self.chainStore.GetExecMerkeRoot() {
 		msgMerkleRoot := msg.Block.getexecResMerkleRoot()
-		merkRoot := self.chainStore.execResult.MerkleRoot
+		merkRoot := self.chainStore.GetExecMerkeRoot()
 		log.Errorf("BlockPrposalMessage check MerkleRoot blocknum:%d,msg MerkleRoot:%s,self MerkleRoot:%s", msg.GetBlockNum(), msgMerkleRoot.ToHexString(), merkRoot.ToHexString())
 		return
 	}
@@ -2091,7 +2090,7 @@ func (self *Server) checkNeedUpdateChainConfig(blockNum uint32) bool {
 
 //checkUpdateChainConfig query leveldb check is force update
 func (self *Server) checkUpdateChainConfig() bool {
-	force, err := isUpdate(self.config.View)
+	force, err := isUpdate(self.chainStore.GetExecWriteSet(), self.config.View)
 	if err != nil {
 		log.Errorf("checkUpdateChainConfig err:%s", err)
 		return false
@@ -2140,7 +2139,7 @@ func (self *Server) makeProposal(blkNum uint32, forEmpty bool) error {
 	cfg := &vconfig.ChainConfig{}
 	cfg = nil
 	if self.checkNeedUpdateChainConfig(blkNum) || self.checkUpdateChainConfig() {
-		chainconfig, err := getChainConfig(blkNum)
+		chainconfig, err := getChainConfig(self.chainStore.GetExecWriteSet(), blkNum)
 		if err != nil {
 			return fmt.Errorf("getChainConfig failed:%s", err)
 		}

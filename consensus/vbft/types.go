@@ -25,6 +25,7 @@ import (
 	"io"
 
 	"github.com/ontio/ontology/common"
+	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/common/serialization"
 	vconfig "github.com/ontio/ontology/consensus/vbft/config"
 	"github.com/ontio/ontology/core/types"
@@ -92,7 +93,9 @@ func (blk *Block) Serialize() ([]byte, error) {
 			return nil, fmt.Errorf("serialize empty block buf: %s", err)
 		}
 	}
-
+	if err := blk.MerkleRoot.Serialize(payload); err != nil {
+		return nil, fmt.Errorf("serialize MerkleRoot block: %s", err)
+	}
 	return payload.Bytes(), nil
 }
 
@@ -127,11 +130,15 @@ func (blk *Block) Deserialize(data []byte) error {
 			}
 		}
 	}
-
+	merkleRoot, eof := source.NextHash()
+	if eof {
+		log.Errorf("Block Deserialize merkleRoot")
+		return io.ErrUnexpectedEOF
+	}
 	blk.Block = block
 	blk.EmptyBlock = emptyBlock
 	blk.Info = info
-
+	blk.MerkleRoot = merkleRoot
 	return nil
 }
 

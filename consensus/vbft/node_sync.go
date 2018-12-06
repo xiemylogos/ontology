@@ -181,7 +181,7 @@ func (self *Syncer) run() {
 						break
 					}
 				} else {
-					if blk.getexecResMerkleRoot() != self.server.chainStore.execResult.MerkleRoot {
+					if blk.getexecResMerkleRoot() != self.server.chainStore.GetExecMerkeRoot() {
 						break
 					}
 				}

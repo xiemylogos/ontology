@@ -240,10 +240,7 @@ func getRawStorageItemFromMemDb(memdb *overlaydb.MemDB, addr common.Address, key
 func GetStorageValue(memdb *overlaydb.MemDB, backend *ledger.Ledger, addr common.Address, key []byte) (value []byte, err error) {
 	rawValue, unknown := getRawStorageItemFromMemDb(memdb, addr, key)
 	if unknown {
-		value, err = backend.GetStorageItem(addr, key)
-		if err != nil {
-			return
-		}
+		return backend.GetStorageItem(addr, key)
 	}
 	if len(rawValue) == 0 {
 		return nil, scommon.ErrNotFound

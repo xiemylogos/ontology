@@ -21,9 +21,12 @@ package vbft
 import (
 	"fmt"
 
+	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/ledger"
 	"github.com/ontio/ontology/core/store"
+	"github.com/ontio/ontology/core/store/overlaydb"
+	"github.com/ontio/ontology/events/message"
 )
 
 type ChainStore struct {
@@ -50,6 +53,22 @@ func (self *ChainStore) close() {
 
 func (self *ChainStore) GetChainedBlockNum() uint32 {
 	return self.chainedBlockNum
+}
+
+func (self *ChainStore) SetExecMerkeRoot(merkleRoot common.Uint256) {
+	self.execResult.MerkleRoot = merkleRoot
+}
+
+func (self *ChainStore) GetExecMerkeRoot() common.Uint256 {
+	return self.execResult.MerkleRoot
+}
+
+func (self *ChainStore) SetExecWriteSet(memdb *overlaydb.MemDB) {
+	self.execResult.WriteSet = memdb
+}
+
+func (self *ChainStore) GetExecWriteSet() *overlaydb.MemDB {
+	return self.execResult.WriteSet
 }
 
 func (self *ChainStore) ReloadFromLedger() {
@@ -96,7 +115,6 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 					if err != nil && blkNum > self.GetChainedBlockNum() {
 						return fmt.Errorf("ledger add submitBlk (%d, %d) failed: %s", blkNum, self.GetChainedBlockNum(), err)
 					}
-					self.needSubmitBlock = false
 					delete(self.pendingBlocks, blkNum-1)
 				} else {
 					break
@@ -109,13 +127,17 @@ func (self *ChainStore) AddBlock(block *Block, server *Server) error {
 			}
 			self.execResult = &execResult
 			self.needSubmitBlock = true
-			server.handleBlockPersistCompleted(blk.Block)
-
+			server.pid.Tell(
+				&message.BlockConsensusComplete{
+					Block: blk.Block,
+				})
 			self.chainedBlockNum = blkNum
-			if blkNum != self.db.GetCurrentBlockHeight() {
-				log.Errorf("!!! chain store added chained block (%d, %d): %s",
-					blkNum, self.db.GetCurrentBlockHeight(), err)
-			}
+			/*
+				if blkNum != self.db.GetCurrentBlockHeight() {
+					log.Errorf("!!! chain store added chained block (%d, %d): %s",
+						blkNum, self.db.GetCurrentBlockHeight(), err)
+				}
+			*/
 			blkNum++
 		} else {
 			break
