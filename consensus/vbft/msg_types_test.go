@@ -58,7 +58,12 @@ func constructProposalMsgTest(acc *account.Account) *blockProposalMsg {
 			Header:       blkHeader,
 			Transactions: nil,
 		},
-		Info: vbftBlkInfo,
+		EmptyBlock: &types.Block{
+			Header:       blkHeader,
+			Transactions: nil,
+		},
+		Info:       vbftBlkInfo,
+		MerkleRoot: common.Uint256{},
 	}
 	msg := &blockProposalMsg{
 		Block: blk,

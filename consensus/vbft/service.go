@@ -125,7 +125,6 @@ type Server struct {
 	bftActionC chan *BftAction
 	msgSendC   chan *SendMsgEvent
 	sub        *events.ActorSubscriber
-	merkleRoot common.Uint256
 	quitC      chan struct{}
 	quit       bool
 	quitWg     sync.WaitGroup
