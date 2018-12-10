@@ -26,6 +26,7 @@ import (
 	"os"
 
 	"encoding/binary"
+
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/common/serialization"

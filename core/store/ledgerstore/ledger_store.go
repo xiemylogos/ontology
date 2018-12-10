@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"crypto/sha256"
+
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
