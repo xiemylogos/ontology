@@ -42,8 +42,8 @@ type LedgerStore interface {
 	Close() error
 	AddHeaders(headers []*types.Header) error
 	AddBlock(block *types.Block, stateMerkleRoot common.Uint256) error
-	ExecuteBlock(b *types.Block) (ExecuteResult, error)   // 共识调用
-	SubmitBlock(b *types.Block, exec ExecuteResult) error // 共识调用
+	ExecuteBlock(b *types.Block) (ExecuteResult, error)   // called by consensus
+	SubmitBlock(b *types.Block, exec ExecuteResult) error // called by consensus
 	GetStateMerkleRoot(height uint32) (result common.Uint256, err error)
 	GetCurrentBlockHash() common.Uint256
 	GetCurrentBlockHeight() uint32

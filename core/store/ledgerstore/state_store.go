@@ -51,7 +51,7 @@ type StateStore struct {
 	store              scom.PersistStore         //Store handler
 	merklePath         string                    //Merkle tree store path
 	merkleTree         *merkle.CompactMerkleTree //Merkle tree of block root
-	stateMerkleTree    *merkle.CompactMerkleTree //Merkle tree of state root
+	deltaMerkleTree    *merkle.CompactMerkleTree //Merkle tree of delta state root
 	merkleHashStore    merkle.HashStore
 	effStateHashHeight uint32
 }
@@ -86,7 +86,7 @@ func NewMemStateStore(stateHashHeight uint32) *StateStore {
 	stateStore := &StateStore{
 		store:              store,
 		merkleTree:         merkle.NewTree(0, nil, nil),
-		stateMerkleTree:    merkle.NewTree(0, nil, nil),
+		deltaMerkleTree:    merkle.NewTree(0, nil, nil),
 		effStateHashHeight: stateHashHeight,
 	}
 
@@ -128,7 +128,7 @@ func (self *StateStore) init(currBlockHeight uint32) error {
 		if treeSize > 0 && treeSize != currBlockHeight-self.effStateHashHeight+1 {
 			return fmt.Errorf("merkle tree size is inconsistent with blockheight: %d", currBlockHeight+1)
 		}
-		self.stateMerkleTree = merkle.NewTree(treeSize, hashes, nil)
+		self.deltaMerkleTree = merkle.NewTree(treeSize, hashes, nil)
 	}
 	return nil
 }
@@ -190,13 +190,13 @@ func (self *StateStore) AddStateMerkleTreeRoot(blockHeight uint32, writeSetHash 
 	if blockHeight < self.effStateHashHeight {
 		return nil
 	} else if blockHeight == self.effStateHashHeight {
-		self.stateMerkleTree = merkle.NewTree(0, nil, nil)
+		self.deltaMerkleTree = merkle.NewTree(0, nil, nil)
 	}
 	key := self.genStateMerkleTreeKey()
 
-	self.stateMerkleTree.AppendHash(writeSetHash)
-	treeSize := self.stateMerkleTree.TreeSize()
-	hashes := self.stateMerkleTree.Hashes()
+	self.deltaMerkleTree.AppendHash(writeSetHash)
+	treeSize := self.deltaMerkleTree.TreeSize()
+	hashes := self.deltaMerkleTree.Hashes()
 	value := common.NewZeroCopySink(make([]byte, 0, 4+len(hashes)*common.UINT256_SIZE))
 	value.WriteUint32(treeSize)
 	for _, hash := range hashes {
@@ -207,7 +207,7 @@ func (self *StateStore) AddStateMerkleTreeRoot(blockHeight uint32, writeSetHash 
 	key = self.genStateMerkleRootKey(blockHeight)
 	value.Reset()
 	value.WriteHash(writeSetHash)
-	value.WriteHash(self.stateMerkleTree.Root())
+	value.WriteHash(self.deltaMerkleTree.Root())
 	self.store.BatchPut(key, value.Bytes())
 
 	return nil
@@ -381,7 +381,7 @@ func (self *StateStore) getStorageKey(key *states.StorageKey) ([]byte, error) {
 }
 
 func (self *StateStore) GetStateMerkleRootWithNewHash(writeSetHash common.Uint256) common.Uint256 {
-	return self.stateMerkleTree.GetRootWithNewLeaf(writeSetHash)
+	return self.deltaMerkleTree.GetRootWithNewLeaf(writeSetHash)
 }
 
 func (self *StateStore) GetBlockRootWithNewTxRoot(txRoot common.Uint256) common.Uint256 {
