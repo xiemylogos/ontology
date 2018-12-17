@@ -54,7 +54,7 @@ type CandidateInfo struct {
 	commitDone bool
 
 	// server sealed block for this round
-	SealedBlock *Block
+	SealedBlock *PendingBlock
 
 	// candidate msgs for this round
 	Proposals  []*blockProposalMsg
@@ -631,7 +631,7 @@ func (pool *BlockPool) setBlockSealed(block *Block, forEmpty bool) error {
 	}
 
 	if c.SealedBlock != nil {
-		if c.SealedBlock.getProposer() == block.getProposer() {
+		if c.SealedBlock.block.getProposer() == block.getProposer() {
 			return nil
 		}
 		return fmt.Errorf("double seal for block %d", blkNum)
@@ -643,34 +643,38 @@ func (pool *BlockPool) setBlockSealed(block *Block, forEmpty bool) error {
 
 	if !forEmpty {
 		// remove empty block
-		c.SealedBlock = &Block{
-			Block: block.Block,
-			Info:  block.Info,
+		c.SealedBlock = &PendingBlock{
+			block: &Block{
+				Block: block.Block,
+				Info:  block.Info,
+			},
 		}
 	} else {
 		// replace with empty block
-		c.SealedBlock = &Block{
-			Block: block.EmptyBlock,
-			Info:  block.Info,
+		c.SealedBlock = &PendingBlock{
+			block: &Block{
+				Block: block.EmptyBlock,
+				Info:  block.Info,
+			},
 		}
 	}
 
 	// add block to chain store
-	if err := pool.chainStore.AddBlock(c.SealedBlock, pool.server); err != nil {
+	if err := pool.chainStore.AddBlock(c.SealedBlock); err != nil {
 		return fmt.Errorf("failed to seal block (%d) to chainstore: %s", blkNum, err)
 	}
 
 	return nil
 }
 
-func (pool *BlockPool) getSealedBlock(blockNum uint32) (*Block, common.Uint256) {
+func (pool *BlockPool) getSealedBlock(blockNum uint32) (*PendingBlock, common.Uint256) {
 	pool.lock.RLock()
 	defer pool.lock.RUnlock()
 
 	// get from cached candidate blocks
 	c := pool.candidateBlocks[blockNum]
 	if c != nil && c.SealedBlock != nil {
-		h := c.SealedBlock.Block.Hash()
+		h := c.SealedBlock.block.Block.Hash()
 		if bytes.Compare(h[:], common.UINT256_EMPTY[:]) != 0 {
 			return c.SealedBlock, h
 		}
@@ -683,7 +687,7 @@ func (pool *BlockPool) getSealedBlock(blockNum uint32) (*Block, common.Uint256) 
 		log.Errorf("getSealedBlock %d err:%v", blockNum, err)
 		return nil, common.Uint256{}
 	}
-	return blk, blk.Block.Hash()
+	return blk, blk.block.Block.Hash()
 }
 
 func (pool *BlockPool) findConsensusEmptyProposal(blockNum uint32) (*blockProposalMsg, error) {

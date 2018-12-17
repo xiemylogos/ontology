@@ -167,31 +167,31 @@ func (self *Syncer) run() {
 			}
 			for self.nextReqBlkNum <= self.targetBlkNum {
 				// FIXME: compete with ledger syncing
-				var blk *Block
+				var blk *PendingBlock
 				if self.nextReqBlkNum <= ledger.DefLedger.GetCurrentBlockHeight() {
 					blk, _ = self.server.chainStore.GetBlock(self.nextReqBlkNum)
 				}
 				if blk == nil {
-					blk = self.blockConsensusDone(self.pendingBlocks[self.nextReqBlkNum])
+					blk.block = self.blockConsensusDone(self.pendingBlocks[self.nextReqBlkNum])
 					merkBlk := self.blockCheckMerkleRoot(self.pendingBlocks[self.nextReqBlkNum])
 					if blk == nil || merkBlk == nil {
 						break
 					}
-					if blk.getexecResMerkleRoot() != merkBlk.getexecResMerkleRoot() {
+					if blk.block.getPrevBlockMerkleRoot() != merkBlk.getPrevBlockMerkleRoot() {
 						break
 					}
 				} else {
-					if blk.getexecResMerkleRoot() != self.server.chainStore.GetExecMerkeRoot() {
+					if blk.block.getPrevBlockMerkleRoot() != self.server.chainStore.GetExecMerkleRoot(blkNum-1) {
 						break
 					}
 				}
 				if blk == nil {
 					break
 				}
-				prevHash := blk.getPrevBlockHash()
+				prevHash := blk.block.getPrevBlockHash()
 				log.Debugf("server %d syncer, sealed block %d, proposer %d, prevhash: %s",
-					self.server.Index, self.nextReqBlkNum, blk.getProposer(), prevHash.ToHexString())
-				if err := self.server.fastForwardBlock(blk); err != nil {
+					self.server.Index, self.nextReqBlkNum, blk.block.getProposer(), prevHash.ToHexString())
+				if err := self.server.fastForwardBlock(blk.block); err != nil {
 					log.Errorf("server %d syncer, fastforward block %d failed %s",
 						self.server.Index, self.nextReqBlkNum, err)
 					break
@@ -244,13 +244,13 @@ func (self *Syncer) blockConsensusDone(blks BlockFromPeers) *Block {
 func (self *Syncer) blockCheckMerkleRoot(blks BlockFromPeers) *Block {
 	merkleRoot := make(map[common.Uint256]int)
 	for _, blk := range blks {
-		merkleRoot[blk.getexecResMerkleRoot()] += 1
+		merkleRoot[blk.getPrevBlockMerkleRoot()] += 1
 	}
 	for merklerootvalue, cnt := range merkleRoot {
 		if cnt > int(self.server.config.C) {
 			// find the block
 			for _, blk := range blks {
-				if blk.getexecResMerkleRoot() == merklerootvalue {
+				if blk.getPrevBlockMerkleRoot() == merklerootvalue {
 					return blk
 				}
 			}
