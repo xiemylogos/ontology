@@ -127,7 +127,14 @@ func (self *ChainStore) AddBlock(block *Block) error {
 	var err error
 	if self.needSubmitBlock {
 		if submitBlk, present := self.pendingBlocks[blkNum-1]; submitBlk != nil && present {
-			err := self.db.SubmitBlock(submitBlk.block.Block, *submitBlk.execResult)
+			exec := &store.ExecuteResult{
+				WriteSet:   nil,
+				Hash:       submitBlk.execResult.Hash,
+				MerkleRoot: common.Uint256{},
+				Notify:     submitBlk.execResult.Notify,
+			}
+			//err := self.db.SubmitBlock(submitBlk.block.Block, *submitBlk.execResult)
+			err := self.db.SubmitBlock(submitBlk.block.Block, *exec)
 			if err != nil && blkNum > self.GetChainedBlockNum() {
 				return fmt.Errorf("ledger add submitBlk (%d, %d) failed: %s", blkNum, self.GetChainedBlockNum(), err)
 			}
