@@ -20,6 +20,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -28,8 +29,10 @@ import (
 	"github.com/ontio/ontology/cmd/utils"
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
+	scom "github.com/ontio/ontology/core/store/common"
+	store "github.com/ontio/ontology/core/store/ledgerstore"
 	"github.com/ontio/ontology/core/store/leveldbstore"
-	ont "github.com/ontio/ontology/smartcontract/service/native/ont"
+	"github.com/ontio/ontology/smartcontract/service/native/ont"
 	nutils "github.com/ontio/ontology/smartcontract/service/native/utils"
 	"github.com/urfave/cli"
 )
@@ -279,11 +282,18 @@ func setBalance(ctx *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("accAddr address:%s invalid:%s", accAddr, err)
 	}
-	store, err := leveldbstore.NewLevelDBStore(config.DefConfig.Common.DataDir)
+	dbDir := utils.GetStoreDirPath(config.DefConfig.Common.DataDir, config.DefConfig.P2PNode.NetworkName)
+	path := fmt.Sprintf("%s%s%s", dbDir, string(os.PathSeparator), store.DBDirState)
+	store, err := leveldbstore.NewLevelDBStore(path)
 	if err != nil {
 		return nil
 	}
-	store.Put(ont.GenBalanceKey(nutils.OntContractAddress, fromAddr), nutils.GenUInt64StorageItem(amount).ToArray())
+	balanceKey := ont.GenBalanceKey(nutils.OntContractAddress, fromAddr)
+	key := append([]byte{byte(scom.ST_STORAGE)}, balanceKey...)
+	err = store.Put(key, nutils.GenUInt64StorageItem(amount).ToArray())
+	if err != nil {
+		PrintInfoMsg("BalanceOf:%s", err)
+	}
 	return nil
 }
 
