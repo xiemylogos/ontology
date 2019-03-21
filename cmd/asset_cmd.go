@@ -20,14 +20,18 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/ontio/ontology/account"
 	cmdcom "github.com/ontio/ontology/cmd/common"
 	"github.com/ontio/ontology/cmd/utils"
+	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
+	"github.com/ontio/ontology/core/store/leveldbstore"
+	ont "github.com/ontio/ontology/smartcontract/service/native/ont"
 	nutils "github.com/ontio/ontology/smartcontract/service/native/utils"
 	"github.com/urfave/cli"
-	"strconv"
-	"strings"
 )
 
 var AssetCommand = cli.Command{
@@ -95,6 +99,15 @@ var AssetCommand = cli.Command{
 			Flags: []cli.Flag{
 				utils.RPCPortFlag,
 				utils.WalletFileFlag,
+			},
+		},
+		{
+			Action:    setBalance,
+			Name:      "setbalance",
+			Usage:     "Set balance of ont of specified account",
+			ArgsUsage: "<address|label|index>",
+			Flags: []cli.Flag{
+				utils.ModifyAddressAmount,
 			},
 		},
 		{
@@ -246,6 +259,31 @@ func getBalance(ctx *cli.Context) error {
 	PrintInfoMsg("BalanceOf:%s", accAddr)
 	PrintInfoMsg("  ONT:%s", balance.Ont)
 	PrintInfoMsg("  ONG:%s", utils.FormatOng(ong))
+	return nil
+}
+
+func setBalance(ctx *cli.Context) error {
+	if ctx.NArg() < 1 {
+		PrintErrorMsg("Missing amount argument.")
+		cli.ShowSubcommandHelp(ctx)
+		return nil
+	}
+	var amount uint64
+	amountStr := ctx.Args().First()
+	amount = utils.ParseOnt(amountStr)
+	accAddr, err := cmdcom.ParseAddress("1", ctx)
+	if err != nil {
+		return err
+	}
+	fromAddr, err := common.AddressFromBase58(accAddr)
+	if err != nil {
+		return fmt.Errorf("accAddr address:%s invalid:%s", accAddr, err)
+	}
+	store, err := leveldbstore.NewLevelDBStore(config.DefConfig.Common.DataDir)
+	if err != nil {
+		return nil
+	}
+	store.Put(ont.GenBalanceKey(nutils.OntContractAddress, fromAddr), nutils.GenUInt64StorageItem(amount).ToArray())
 	return nil
 }
 

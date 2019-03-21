@@ -391,6 +391,10 @@ var (
 		Name:  "amount",
 		Usage: "Amount of transfer from. Float number",
 	}
+	ModifyAddressAmount = cli.StringFlag{
+		Name:  "amount",
+		Usage: "Modify Address ont amount",
+	}
 	TransferFromSenderFlag = cli.StringFlag{
 		Name:  "sender",
 		Usage: "Sender account `<address>` of transfer from transaction, Default is transfer-to account",
