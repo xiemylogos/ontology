@@ -280,19 +280,21 @@ func setBalance(ctx *cli.Context) error {
 	}
 	fromAddr, err := common.AddressFromBase58(accAddr)
 	if err != nil {
+		PrintErrorMsg("accAddr address:%s invalid:%s", accAddr, err)
 		return fmt.Errorf("accAddr address:%s invalid:%s", accAddr, err)
 	}
 	dbDir := utils.GetStoreDirPath(config.DefConfig.Common.DataDir, config.DefConfig.P2PNode.NetworkName)
 	path := fmt.Sprintf("%s%s%s", dbDir, string(os.PathSeparator), store.DBDirState)
 	store, err := leveldbstore.NewLevelDBStore(path)
 	if err != nil {
+		PrintErrorMsg("store err:%s", err)
 		return nil
 	}
 	balanceKey := ont.GenBalanceKey(nutils.OntContractAddress, fromAddr)
 	key := append([]byte{byte(scom.ST_STORAGE)}, balanceKey...)
 	err = store.Put(key, nutils.GenUInt64StorageItem(amount).ToArray())
 	if err != nil {
-		PrintInfoMsg("BalanceOf:%s", err)
+		PrintErrorMsg("BalanceOf:%s", err)
 	}
 	return nil
 }
