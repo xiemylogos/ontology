@@ -2044,6 +2044,8 @@ func (self *Server) msgSendLoop() {
 	for {
 		select {
 		case evt := <-self.msgSendC:
+			log.Infof("test bft behavior-one only recv msg. send msg topeer:%v", evt.ToPeer)
+			continue
 			if self.nonConsensusNode() {
 				continue
 			}
