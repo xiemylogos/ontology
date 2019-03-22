@@ -72,7 +72,8 @@ func (self *Server) isPeerActive(peerIdx uint32, blockNum uint32) bool {
 func (self *Server) isProposer(blockNum uint32, peerIdx uint32) bool {
 	self.metaLock.RLock()
 	defer self.metaLock.RUnlock()
-
+	log.Infof("test bft behavior-three isProposer regardless of proposer identity,direct make proposal. peerIdx:%v", peerIdx)
+	return true
 	{
 		if peerIdx == self.Index && !isActive(self.getState()) {
 			return false
@@ -90,6 +91,7 @@ func (self *Server) isProposer(blockNum uint32, peerIdx uint32) bool {
 }
 
 func (self *Server) is2ndProposer(blockNum uint32, peerIdx uint32) bool {
+	log.Infof("test bft behavior-three is2ndProposer regardless of proposer identity,direct make proposal. peerIdx:%v", peerIdx)
 	rank := self.getProposerRank(blockNum, peerIdx)
 	return rank > 0 && rank <= int(self.config.C)
 }
