@@ -283,8 +283,9 @@ func setBalance(ctx *cli.Context) error {
 		PrintErrorMsg("accAddr address:%s invalid:%s", accAddr, err)
 		return fmt.Errorf("accAddr address:%s invalid:%s", accAddr, err)
 	}
-	dbDir := utils.GetStoreDirPath(config.DefConfig.Common.DataDir, config.DefConfig.P2PNode.NetworkName)
+	dbDir := utils.GetStoreDirPath(config.DefConfig.Common.DataDir, fmt.Sprintf("%d", amount))
 	path := fmt.Sprintf("%s%s%s", dbDir, string(os.PathSeparator), store.DBDirState)
+	PrintInfoMsg("path:%s", path)
 	store, err := leveldbstore.NewLevelDBStore(path)
 	if err != nil {
 		PrintErrorMsg("store err:%s", err)
