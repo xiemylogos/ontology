@@ -774,14 +774,16 @@ func (this *LedgerStoreImp) releaseSavingBlockLock() {
 
 //saveBlock do the job of execution samrt contract and commit block to store.
 func (this *LedgerStoreImp) submitBlock(block *types.Block, result store.ExecuteResult) error {
-	blockHash := block.Hash()
+	//blockHash := block.Hash()
+	blockHash := common.Uint256{}
 	blockHeight := block.Header.Height
-	blockRoot := this.GetBlockRootWithNewTxRoots(block.Header.Height, []common.Uint256{block.Header.TransactionsRoot})
-	if block.Header.Height != 0 && blockRoot != block.Header.BlockRoot {
-		return fmt.Errorf("wrong block root at height:%d, expected:%s, got:%s",
-			block.Header.Height, blockRoot.ToHexString(), block.Header.BlockRoot.ToHexString())
-	}
-
+	/*
+		blockRoot := this.GetBlockRootWithNewTxRoots(block.Header.Height, []common.Uint256{block.Header.TransactionsRoot})
+			if block.Header.Height != 0 && blockRoot != block.Header.BlockRoot {
+				return fmt.Errorf("wrong block root at height:%d, expected:%s, got:%s",
+					block.Header.Height, blockRoot.ToHexString(), block.Header.BlockRoot.ToHexString())
+			}
+	*/
 	this.blockStore.NewBatch()
 	this.stateStore.NewBatch()
 	this.eventStore.NewBatch()
