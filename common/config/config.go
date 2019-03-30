@@ -111,8 +111,7 @@ var STATE_HASH_CHECK_HEIGHT = map[uint32]uint32{
 }
 
 func GetStateHashCheckHeight(id uint32) uint32 {
-	return 10
-	//return STATE_HASH_CHECK_HEIGHT[id]
+	return STATE_HASH_CHECK_HEIGHT[id]
 }
 
 func GetNetworkName(id uint32) string {
