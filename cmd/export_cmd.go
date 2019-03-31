@@ -38,7 +38,6 @@ var ExportCommand = cli.Command{
 	ArgsUsage: "",
 	Action:    exportBlocks,
 	Flags: []cli.Flag{
-		utils.RPCPortFlag,
 		utils.ExportFileFlag,
 		utils.ExportStartHeightFlag,
 		utils.ExportEndHeightFlag,
