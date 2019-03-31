@@ -472,6 +472,10 @@ var (
 		Usage: "Export block speed `<level>` (h|m|l), h for high speed, m for middle speed and l for low speed",
 		Value: "m",
 	}
+	ExportDisableSignFlag = cli.BoolFlag{
+		Name:  "disable-signdata",
+		Usage: "Remove signdata from block header",
+	}
 
 	//PreExecute switcher
 	TxpoolPreExecDisableFlag = cli.BoolFlag{

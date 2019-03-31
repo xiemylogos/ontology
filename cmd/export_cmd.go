@@ -21,12 +21,15 @@ package cmd
 import (
 	"bufio"
 	"fmt"
-	"github.com/gosuri/uiprogress"
-	"github.com/ontio/ontology/cmd/utils"
-	"github.com/ontio/ontology/common/serialization"
-	"github.com/urfave/cli"
 	"os"
 	"time"
+
+	"github.com/gosuri/uiprogress"
+	"github.com/ontio/ontology/cmd/utils"
+	"github.com/ontio/ontology/common/config"
+	"github.com/ontio/ontology/common/serialization"
+	"github.com/ontio/ontology/core/ledger"
+	"github.com/urfave/cli"
 )
 
 var ExportCommand = cli.Command{
@@ -40,12 +43,18 @@ var ExportCommand = cli.Command{
 		utils.ExportStartHeightFlag,
 		utils.ExportEndHeightFlag,
 		utils.ExportSpeedFlag,
+		utils.ExportDisableSignFlag,
 	},
 	Description: "",
 }
 
 func exportBlocks(ctx *cli.Context) error {
-	SetRpcPort(ctx)
+	cfg, err := SetOntologyConfig(ctx)
+	if err != nil {
+		PrintErrorMsg("SetOntologyConfig error:%s", err)
+		cli.ShowSubcommandHelp(ctx)
+		return nil
+	}
 	exportFile := ctx.String(utils.GetFlagName(utils.ExportFileFlag))
 	if exportFile == "" {
 		PrintErrorMsg("Missing %s argument.", utils.ExportFileFlag.Name)
@@ -108,11 +117,22 @@ func exportBlocks(ctx *cli.Context) error {
 		})
 
 	PrintInfoMsg("Start export.")
+	dbDir := utils.GetStoreDirPath(config.DefConfig.Common.DataDir, config.DefConfig.P2PNode.NetworkName)
+
+	stateHashHeight := config.GetStateHashCheckHeight(cfg.P2PNode.NetworkId)
+	ledger.DefLedger, err = ledger.NewLedger(dbDir, stateHashHeight)
+	if err != nil {
+		return fmt.Errorf("NewLedger error:%s", err)
+	}
 	for i := uint32(startHeight); i <= uint32(endHeight); i++ {
-		blockData, err := utils.GetBlockData(i)
+		block, err := ledger.DefLedger.GetBlockByHeight(i)
 		if err != nil {
-			return fmt.Errorf("GetBlockData:%d error:%s", i, err)
+			return fmt.Errorf("GetBlock:%d error:%s", i, err)
 		}
+		if ctx.Bool(utils.GetFlagName(utils.ExportDisableSignFlag)) {
+			block.Header.SigData = [][]byte{}
+		}
+		blockData := block.ToArray()
 		data, err := utils.CompressBlockData(blockData, metadata.CompressType)
 		if err != nil {
 			return fmt.Errorf("CompressBlockData height:%d error:%s", i, err)
