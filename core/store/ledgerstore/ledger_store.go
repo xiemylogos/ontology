@@ -596,7 +596,8 @@ func (this *LedgerStoreImp) AddBlock(block *types.Block, stateMerkleRoot common.
 }
 
 func (this *LedgerStoreImp) saveBlockToBlockStore(block *types.Block) error {
-	blockHash := block.Hash()
+	//	blockHash := block.Hash()
+	blockHash, _ := common.Uint256FromHexString("1b8fa7f242d0eeb4395f89cbb59e4c29634047e006245c4914306e78a88e14ce5")
 	blockHeight := block.Header.Height
 
 	this.setHeaderIndex(blockHeight, blockHash)
@@ -694,23 +695,23 @@ func accumulateHash(hasher hash.Hash, iter scom.StoreIterator) error {
 }
 
 func (this *LedgerStoreImp) saveBlockToStateStore(block *types.Block, result store.ExecuteResult) error {
-	blockHash := block.Hash()
+	//blockHash := block.Hash()
 	blockHeight := block.Header.Height
 
 	for _, notify := range result.Notify {
 		SaveNotify(this.eventStore, notify.TxHash, notify)
 	}
-
-	err := this.stateStore.AddStateMerkleTreeRoot(blockHeight, result.Hash)
+	resultkHash, _ := common.Uint256FromHexString("1b8fa7f242d0eeb4395f89cbb59e4c29634047e33245c4914306e78a88e14ce5")
+	err := this.stateStore.AddStateMerkleTreeRoot(blockHeight, resultkHash)
 	if err != nil {
 		return fmt.Errorf("AddBlockMerkleTreeRoot error %s", err)
 	}
-
-	err = this.stateStore.AddBlockMerkleTreeRoot(block.Header.TransactionsRoot)
+	txRoot, _ := common.Uint256FromHexString("1b8fa7f242d0eeb4395f8959e4c29634047e33245c4914306e78a88e14ce5")
+	err = this.stateStore.AddBlockMerkleTreeRoot(txRoot)
 	if err != nil {
 		return fmt.Errorf("AddBlockMerkleTreeRoot error %s", err)
 	}
-
+	blockHash, _ := common.Uint256FromHexString("1b8fa7f242d0eeb4395f89cbb59e4c29634047e33245c4914306e78a88e14ce5")
 	err = this.stateStore.SaveCurrentBlock(blockHeight, blockHash)
 	if err != nil {
 		return fmt.Errorf("SaveCurrentBlock error %s", err)
@@ -781,7 +782,6 @@ func (this *LedgerStoreImp) submitBlock(block *types.Block, result store.Execute
 		return fmt.Errorf("wrong block root at height:%d, expected:%s, got:%s",
 			block.Header.Height, blockRoot.ToHexString(), block.Header.BlockRoot.ToHexString())
 	}
-
 	this.blockStore.NewBatch()
 	this.stateStore.NewBatch()
 	this.eventStore.NewBatch()

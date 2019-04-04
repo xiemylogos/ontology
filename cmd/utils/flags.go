@@ -400,6 +400,10 @@ var (
 		Name:  "sender",
 		Usage: "Sender account `<address>` of transfer from transaction, Default is transfer-to account",
 	}
+	ModifyAddressAmount = cli.StringFlag{
+		Name:  "amount",
+		Usage: "Modify Address ont amount",
+	}
 	SendTxFlag = cli.BoolFlag{
 		Name:  "send,s",
 		Usage: "Send raw transaction to Ontology",

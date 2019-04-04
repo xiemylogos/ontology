@@ -20,14 +20,21 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/ontio/ontology/account"
 	cmdcom "github.com/ontio/ontology/cmd/common"
 	"github.com/ontio/ontology/cmd/utils"
+	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
+	scom "github.com/ontio/ontology/core/store/common"
+	store "github.com/ontio/ontology/core/store/ledgerstore"
+	"github.com/ontio/ontology/core/store/leveldbstore"
+	"github.com/ontio/ontology/smartcontract/service/native/ont"
 	nutils "github.com/ontio/ontology/smartcontract/service/native/utils"
 	"github.com/urfave/cli"
-	"strconv"
-	"strings"
 )
 
 var AssetCommand = cli.Command{
@@ -95,6 +102,15 @@ var AssetCommand = cli.Command{
 			Flags: []cli.Flag{
 				utils.RPCPortFlag,
 				utils.WalletFileFlag,
+			},
+		},
+		{
+			Action:    setBalance,
+			Name:      "setbalance",
+			Usage:     "Set balance of ont of specified account",
+			ArgsUsage: "<address|label|index>",
+			Flags: []cli.Flag{
+				utils.ModifyAddressAmount,
 			},
 		},
 		{
@@ -246,6 +262,40 @@ func getBalance(ctx *cli.Context) error {
 	PrintInfoMsg("BalanceOf:%s", accAddr)
 	PrintInfoMsg("  ONT:%s", balance.Ont)
 	PrintInfoMsg("  ONG:%s", utils.FormatOng(ong))
+	return nil
+}
+func setBalance(ctx *cli.Context) error {
+	if ctx.NArg() < 1 {
+		PrintErrorMsg("Missing amount argument.")
+		cli.ShowSubcommandHelp(ctx)
+		return nil
+	}
+	var amount uint64
+	amountStr := ctx.Args().First()
+	amount = utils.ParseOnt(amountStr)
+	accAddr, err := cmdcom.ParseAddress("1", ctx)
+	if err != nil {
+		return err
+	}
+	fromAddr, err := common.AddressFromBase58(accAddr)
+	if err != nil {
+		PrintErrorMsg("accAddr address:%s invalid:%s", accAddr, err)
+		return fmt.Errorf("accAddr address:%s invalid:%s", accAddr, err)
+	}
+	dbDir := utils.GetStoreDirPath(config.DefConfig.Common.DataDir, fmt.Sprintf("%d", amount))
+	path := fmt.Sprintf("%s%s%s", dbDir, string(os.PathSeparator), store.DBDirState)
+	PrintInfoMsg("path:%s", path)
+	store, err := leveldbstore.NewLevelDBStore(path)
+	if err != nil {
+		PrintErrorMsg("store err:%s", err)
+		return nil
+	}
+	balanceKey := ont.GenBalanceKey(nutils.OntContractAddress, fromAddr)
+	key := append([]byte{byte(scom.ST_STORAGE)}, balanceKey...)
+	err = store.Put(key, nutils.GenUInt64StorageItem(amount).ToArray())
+	if err != nil {
+		PrintErrorMsg("BalanceOf:%s", err)
+	}
 	return nil
 }
 
