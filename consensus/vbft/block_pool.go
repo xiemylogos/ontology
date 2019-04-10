@@ -316,7 +316,7 @@ func (pool *BlockPool) endorseDone(blkNum uint32, C uint32) (uint32, bool, bool)
 	if uint32(len(candidate.EndorseSigs)) < C+1 {
 		return math.MaxUint32, false, false
 	}
-
+	log.Info("xiexie::: endorseDone:%d", len(candidate.EndorseSigs))
 	for _, eSigs := range candidate.EndorseSigs {
 		for _, esig := range eSigs {
 			if esig.ForEmpty {
