@@ -440,7 +440,7 @@ func (this *LedgerStoreImp) verifyHeader(header *types.Header, vbftPeerInfo map[
 	consensusType := strings.ToLower(config.DefConfig.Genesis.ConsensusType)
 	if consensusType == "vbft" {
 		//check bookkeeppers
-		log.Infof("xiexie----sign number:%d", len(header.Bookkeepers))
+		log.Infof("xiexie----sign number:%d,height:%d", len(header.Bookkeepers), header.Height)
 		m := len(vbftPeerInfo) - (len(vbftPeerInfo)*6)/7
 		if len(header.Bookkeepers) < m {
 			return vbftPeerInfo, fmt.Errorf("header Bookkeepers %d more than 6/7 len vbftPeerInfo%d", len(header.Bookkeepers), len(vbftPeerInfo))
