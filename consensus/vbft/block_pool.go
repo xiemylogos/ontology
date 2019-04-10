@@ -594,7 +594,6 @@ func (pool *BlockPool) addSignaturesToBlockLocked(block *Block, forEmpty bool) e
 	}
 
 	// add endorsers' sig
-	log.Infof("xiexie endorsesigs:%d,height:%d,forEmpty:%v,proposer:%d", len(c.EndorseSigs), blkNum, forEmpty, proposer)
 	for endorser, eSigs := range c.EndorseSigs {
 		for _, sig := range eSigs {
 			if sig.EndorsedProposer == proposer && sig.ForEmpty == forEmpty {
@@ -607,7 +606,6 @@ func (pool *BlockPool) addSignaturesToBlockLocked(block *Block, forEmpty bool) e
 			}
 		}
 	}
-	log.Infof("xiexie ---end ----- endorsesigs:%d", len(sigData))
 	if !forEmpty {
 		block.Block.Header.Bookkeepers = bookkeepers
 		block.Block.Header.SigData = sigData
