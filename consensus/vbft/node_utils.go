@@ -335,6 +335,7 @@ func getCommitConsensus(commitMsgs []*blockCommitMsg, C int) (uint32, bool) {
 
 		commitCount[c.BlockProposer] += 1
 		if commitCount[c.BlockProposer] > C {
+			log.Infof("xiexie:getCommitConsensus :%d,%d", c.BlockProposer, commitCount[c.BlockProposer])
 			return c.BlockProposer, emptyCommit
 		}
 
