@@ -493,7 +493,6 @@ func (pool *BlockPool) commitDone(blkNum uint32, C uint32, N uint32) (uint32, bo
 	if candidate == nil {
 		return math.MaxUint32, false, false
 	}
-
 	// check consensus with commit msgs
 	proposer, forEmpty := getCommitConsensus(candidate.CommitMsgs, int(C))
 
@@ -501,6 +500,7 @@ func (pool *BlockPool) commitDone(blkNum uint32, C uint32, N uint32) (uint32, bo
 	// if C <= (N-1)/3, N-1-C >= 2*C
 	C = N - 1 - C
 	if proposer == math.MaxUint32 {
+		log.Info("xiexie::: commitDone:%d", len(candidate.EndorseSigs))
 		// check consensus with endorse sigs
 		var emptyCnt uint32
 		endorseCnt := make(map[uint32]uint32) // proposer -> endorsed-cnt
@@ -524,6 +524,7 @@ func (pool *BlockPool) commitDone(blkNum uint32, C uint32, N uint32) (uint32, bo
 						if !forEmpty {
 							forEmpty = emptyCnt > C
 						}
+						log.Info("xiexie::: commitDone endorseCnt:%d", len(endorseCnt))
 						break
 					}
 				}
@@ -536,6 +537,7 @@ func (pool *BlockPool) commitDone(blkNum uint32, C uint32, N uint32) (uint32, bo
 	}
 
 	if proposer != math.MaxUint32 {
+
 		return proposer, forEmpty, true
 	}
 
