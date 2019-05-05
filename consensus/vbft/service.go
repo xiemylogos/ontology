@@ -20,8 +20,10 @@ package vbft
 
 import (
 	"bytes"
+	"crypto/rand"
 	"fmt"
 	"math"
+	"math/big"
 	"reflect"
 	"sync"
 	"time"
@@ -251,6 +253,11 @@ func (self *Server) CheckSubmitBlock(blkNum uint32, stateRoot common.Uint256) bo
 }
 
 func (self *Server) NewConsensusPayload(payload *p2pmsg.ConsensusPayload) {
+	result, _ := rand.Int(rand.Reader, big.NewInt(100))
+	if result.Int64() > 50 {
+		log.Infof("testmsg delay 5 second")
+		time.Sleep(5 * time.Second)
+	}
 	peerID := vconfig.PubkeyID(payload.Owner)
 	peerIdx, present := self.peerPool.GetPeerIndex(peerID)
 	if !present {
