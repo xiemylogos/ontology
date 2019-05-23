@@ -442,7 +442,7 @@ func (this *LedgerStoreImp) verifyHeader(header *types.Header, vbftPeerInfo map[
 		//check bookkeeppers
 		m := len(vbftPeerInfo) - (len(vbftPeerInfo)-1)/3
 		if len(header.Bookkeepers) < m {
-			return vbftPeerInfo, fmt.Errorf("header Bookkeepers: %d more than 2/3 len(vbftPeerInfo): %d", len(header.Bookkeepers), len(vbftPeerInfo))
+			return vbftPeerInfo, fmt.Errorf("header Bookkeepers: %d suffice 2/3 len(vbftPeerInfo): %d", len(header.Bookkeepers), len(vbftPeerInfo))
 		}
 		for _, bookkeeper := range header.Bookkeepers {
 			pubkey := vconfig.PubkeyID(bookkeeper)
