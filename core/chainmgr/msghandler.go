@@ -145,7 +145,8 @@ func (self ChainManager) startChildShard(shardID common.ShardID, shardState *sha
 	}
 
 	self.p2pPid.Tell(&server.StartSync{
-		ShardID: shardID.ToUint64(),
+		ShardID:    shardID.ToUint64(),
+		ShardSeeds: shardInfo.SeedList,
 	})
 	log.Infof("chainmgr starting shard-sync %d", shardID)
 

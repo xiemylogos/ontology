@@ -334,7 +334,8 @@ func (self *ChainManager) Start(p2pPid *actor.PID, txPoolMgr *txnpool.TxnPoolMan
 		shardId := syncerToStart[i]
 		if self.shards[shardId] != nil {
 			p2pPid.Tell(&server.StartSync{
-				ShardID: shardId.ToUint64(),
+				ShardID:    shardId.ToUint64(),
+				ShardSeeds: self.shards[shardId].SeedList,
 			})
 			log.Infof("chainmgr starting shard-sync %d", shardId)
 		}
