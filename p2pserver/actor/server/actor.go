@@ -97,7 +97,7 @@ func (this *P2PActor) Receive(ctx actor.Context) {
 		this.server.OnAddBlock(msg.Height, msg.ShardID)
 	case *StartSync:
 		if shardID, err := common2.NewShardID(msg.ShardID); err == nil {
-			if err := this.server.StartSyncShard(shardID); err != nil {
+			if err := this.server.StartSyncShard(shardID, msg.ShardSeeds); err != nil {
 				log.Errorf("[p2p] start syncing shard %d: %s", shardID, err)
 			}
 		} else {

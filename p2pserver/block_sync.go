@@ -332,7 +332,7 @@ func (this *BlockSyncMgr) checkTimeout() {
 			}
 			flightInfo.SetNodeId(reqNode.GetID())
 
-			msg := msgpack.NewBlkDataReq(blockHash)
+			msg := msgpack.NewBlkDataReq(this.shardID, blockHash)
 			err := this.server.Send(reqNode, msg, false)
 			if err != nil {
 				log.Warnf("[p2p]checkTimeout reqNode ID:%d Send error:%s", reqNode.GetID(), err)
@@ -444,7 +444,7 @@ func (this *BlockSyncMgr) syncBlock() {
 				return
 			}
 			this.addFlightBlock(reqNode.GetID(), nextBlockHeight, nextBlockHash)
-			msg := msgpack.NewBlkDataReq(nextBlockHash)
+			msg := msgpack.NewBlkDataReq(this.shardID, nextBlockHash)
 			err := this.server.Send(reqNode, msg, false)
 			if err != nil {
 				log.Warnf("[p2p]syncBlock Height:%d ReqBlkData error:%s", nextBlockHeight, err)
@@ -700,7 +700,7 @@ func (this *BlockSyncMgr) SaveSyncBlock(blockHeight uint32) bool {
 			return false
 		}
 		this.addFlightBlock(reqNode.GetID(), nextBlockHeight, nextBlock.Hash())
-		msg := msgpack.NewBlkDataReq(nextBlock.Hash())
+		msg := msgpack.NewBlkDataReq(this.shardID, nextBlock.Hash())
 		err := this.server.Send(reqNode, msg, false)
 		if err != nil {
 			log.Warn("[p2p]require new block error:", err)
