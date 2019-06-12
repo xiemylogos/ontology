@@ -32,6 +32,7 @@ import (
 	"github.com/ontio/ontology/core/ledger"
 	com "github.com/ontio/ontology/core/store/common"
 	"github.com/ontio/ontology/core/types"
+	"github.com/ontio/ontology/p2pserver/actor/server"
 	shardstates "github.com/ontio/ontology/smartcontract/service/native/shardmgmt/states"
 )
 
@@ -54,6 +55,11 @@ func (self *ChainManager) onShardConfigured(evt *shardstates.ConfigShardEvent) e
 }
 
 func (self *ChainManager) onShardPeerJoint(evt *shardstates.PeerJoinShardEvent) error {
+	if self.account == nil {
+		// peer is in sync mode, skip peer joint event
+		return nil
+	}
+
 	pubKey := hex.EncodeToString(keypair.SerializePublicKey(self.account.PublicKey))
 	if evt.PeerPubKey != pubKey {
 		return nil
@@ -137,8 +143,13 @@ func (self ChainManager) startChildShard(shardID common.ShardID, shardState *sha
 	if err := self.initShardTxPool(); err != nil {
 		return fmt.Errorf("init initShardTxPool %d, failed to init initShardTxPool: %s", self.shardID, err)
 	}
-	self.startConsensus()
-	return nil
+
+	self.p2pPid.Tell(&server.StartSync{
+		ShardID: shardID.ToUint64(),
+	})
+	log.Infof("chainmgr starting shard-sync %d", shardID)
+
+	return self.startConsensus()
 }
 
 func (self *ChainManager) onBlockPersistCompleted(blk *types.Block) {

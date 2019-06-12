@@ -254,7 +254,7 @@ func (self *ChainManager) GetDefaultLedger() *ledger.Ledger {
 }
 
 func (self *ChainManager) startConsensus() error {
-	if self.consensus != nil {
+	if self.consensus != nil || self.account == nil {
 		return nil
 	}
 
@@ -336,7 +336,7 @@ func (self *ChainManager) Start(p2pPid *actor.PID, txPoolMgr *txnpool.TxnPoolMan
 			p2pPid.Tell(&server.StartSync{
 				ShardID: shardId.ToUint64(),
 			})
-			log.Infof("start sync %d", shardId)
+			log.Infof("chainmgr starting shard-sync %d", shardId)
 		}
 	}
 
