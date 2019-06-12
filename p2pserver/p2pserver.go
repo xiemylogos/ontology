@@ -117,6 +117,10 @@ func (this *P2PServer) StartSyncShard(shardID comm.ShardID) error {
 	if lgr == nil {
 		return fmt.Errorf("failed to get shard ledger before starting syncing %d", shardID)
 	}
+	if _, present := this.blockSyncers[shardID.ToUint64()]; present {
+		return nil
+	}
+
 	syncer := NewBlockSyncMgr(shardID, this, lgr)
 	if syncer == nil {
 		return fmt.Errorf("failed to init syncer for shard %d", shardID)
@@ -130,7 +134,7 @@ func (this *P2PServer) StartSyncShard(shardID comm.ShardID) error {
 		}
 	}
 	go syncer.Start()
-	log.Infof("syncer for shard %d started", shardID.ToUint64())
+	log.Infof("syncer for shard %d started, nodes: %d", shardID.ToUint64(), len(syncer.nodeWeights))
 	return nil
 }
 
@@ -518,6 +522,13 @@ func (this *P2PServer) heartBeatService() {
 
 //ping send pkg to get pong msg from others
 func (this *P2PServer) ping() {
+	// update block-heights of local peer
+	heights := make(map[uint64]uint32)
+	for shardID, syncer := range this.blockSyncers {
+		heights[shardID] = syncer.ledger.GetCurrentBlockHeight()
+	}
+	this.network.SetHeight(heights)
+
 	peers := this.network.GetNeighbors()
 	this.pingTo(peers)
 }

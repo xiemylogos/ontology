@@ -463,7 +463,7 @@ func (this *BlockSyncMgr) OnHeaderReceive(fromID uint64, headers []*types.Header
 	if len(headers) == 0 {
 		return
 	}
-	log.Infof("Header receive height:%d - %d", headers[0].Height, headers[len(headers)-1].Height)
+	log.Infof("Header receive shard %d height:%d - %d", headers[0].ShardID, headers[0].Height, headers[len(headers)-1].Height)
 	height := headers[0].Height
 	curHeaderHeight := this.ledger.GetCurrentHeaderHeight()
 
@@ -493,7 +493,7 @@ func (this *BlockSyncMgr) OnBlockReceive(fromID uint64, blockSize uint32, block 
 	merkleRoot common.Uint256) {
 	height := block.Header.Height
 	blockHash := block.Hash()
-	log.Trace("[p2p]OnBlockReceive Height:%d", height)
+	log.Tracef("[p2p]OnBlockReceive shard(%d,%d) Height:%d", this.shardID, block.Header.ShardID, height)
 	flightInfo := this.getFlightBlock(blockHash, fromID)
 	if flightInfo != nil {
 		t := (time.Now().UnixNano() - flightInfo.GetStartTime().UnixNano()) / int64(time.Millisecond)

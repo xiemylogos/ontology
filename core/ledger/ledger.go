@@ -102,7 +102,7 @@ func NewShardLedger(shardID common.ShardID, dataDir string, mainLedger *Ledger) 
 	for shardID.ParentID().ToUint64() != config.DEFAULT_SHARD_ID {
 		parentLedger, err = NewShardLedger(shardID.ParentID(), dataDir, mainLedger)
 		if err != nil {
-			return nil, fmt.Errorf("failed to load shard ledger %d: %s", shardID.ParentID(), err)
+			return nil, fmt.Errorf("failed to load shard %d ledger %d: %s", shardID, shardID.ParentID(), err)
 		}
 	}
 	if parentLedger == nil {
@@ -113,11 +113,11 @@ func NewShardLedger(shardID common.ShardID, dataDir string, mainLedger *Ledger) 
 	dbPath := path.Join(dataDir, fmt.Sprintf("shard_%d", shardID.ToUint64()))
 	ldgStore, err := ledgerstore.NewLedgerStore(dbPath, 0, parentLedger.ldgStore)
 	if err != nil {
-		return nil, fmt.Errorf("NewLedgerStore error %s", err)
+		return nil, fmt.Errorf("NewLedgerStore %d error %s", shardID, err)
 	}
 	cshardStore, err := ledgerstore.NewCrossShardStore(dbPath)
 	if err != nil {
-		return nil, fmt.Errorf("NewCrossShardStore error %s", err)
+		return nil, fmt.Errorf("NewCrossShardStore %d error %s", shardID, err)
 	}
 	// init parent block cache
 	parentBlockCache, err := ledgerstore.ResetBlockCacheStore(shardID.ParentID(), dataDir)
@@ -182,7 +182,7 @@ func (self *Ledger) AddBlock(block *types.Block, stateMerkleRoot common.Uint256)
 	} else {
 		err := self.ldgStore.AddBlock(block, stateMerkleRoot)
 		if err != nil {
-			log.Errorf("Ledger AddBlock BlockHeight:%d BlockHash:%x error:%s", block.Header.Height, block.Hash(), err)
+			log.Errorf("Ledger %d AddBlock BlockHeight:%d,%d BlockHash:%x error:%s", self.ShardID, block.Header.ShardID, block.Header.Height, block.Hash(), err)
 		}
 		return err
 	}
@@ -195,7 +195,7 @@ func (self *Ledger) ExecuteBlock(b *types.Block) (store.ExecuteResult, error) {
 			if err == scommon.ErrNotFound {
 				return self.ldgStore.ExecuteBlock(b)
 			} else {
-				log.Errorf("Ledger ExecuteBlock GetBlock sharad height:%d,ParentHeight:%d error:%s", b.Header.Height, b.Header.ParentHeight, err)
+				log.Errorf("Ledger %d ExecuteBlock GetBlock sharad height:%d,ParentHeight:%d error:%s", self.ShardID, b.Header.Height, b.Header.ParentHeight, err)
 				return store.ExecuteResult{}, err
 			}
 		}
@@ -204,7 +204,7 @@ func (self *Ledger) ExecuteBlock(b *types.Block) (store.ExecuteResult, error) {
 			return result, err
 		}
 		if merkleRoot != result.MerkleRoot {
-			log.Errorf("ExecuteBlock check parentblock cache MerkleRoot blocknum:%d,MerkleRoot:%s,execute MerkleRoot:%s", b.Header.ParentHeight, merkleRoot.ToHexString(), result.MerkleRoot.ToHexString())
+			log.Errorf("ExecuteBlock %d check parentblock cache MerkleRoot blocknum:%d,MerkleRoot:%s,execute MerkleRoot:%s", self.ShardID, b.Header.ParentHeight, merkleRoot.ToHexString(), result.MerkleRoot.ToHexString())
 			return store.ExecuteResult{}, fmt.Errorf("merkleroot not match")
 		}
 		self.ParentBlockCache.SaveBlockExecuteResult(b.Header.ParentHeight, result)
@@ -219,12 +219,12 @@ func (self *Ledger) SubmitBlock(b *types.Block, exec store.ExecuteResult) error 
 			if err == scommon.ErrNotFound {
 				err := self.ldgStore.SubmitBlock(b, exec)
 				if err != nil {
-					log.Errorf("Ledger SubmitBlock BlockHeight:%d BlockHash:%x error:%s", b.Header.Height, b.Hash(), err)
+					log.Errorf("Ledger %d SubmitBlock BlockHeight:%d BlockHash:%x error:%s", self.ShardID, b.Header.Height, b.Hash(), err)
 					return err
 				}
 				return nil
 			} else {
-				log.Errorf("Ledger SubmitBlock GetBlock sharad height:%d,ParentHeight:%d error:%s", b.Header.Height, b.Header.ParentHeight, err)
+				log.Errorf("Ledger %d SubmitBlock GetBlock sharad height:%d,ParentHeight:%d error:%s", self.ShardID, b.Header.Height, b.Header.ParentHeight, err)
 				return err
 			}
 		}
@@ -240,7 +240,7 @@ func (self *Ledger) SubmitBlock(b *types.Block, exec store.ExecuteResult) error 
 	}
 	err := self.ldgStore.SubmitBlock(b, exec)
 	if err != nil {
-		log.Errorf("Ledger SubmitBlock BlockHeight:%d BlockHash:%x error:%s", b.Header.Height, b.Hash(), err)
+		log.Errorf("Ledger %d SubmitBlock BlockHeight:%d BlockHash:%x error:%s", self.ShardID, b.Header.Height, b.Hash(), err)
 		return err
 	}
 	return nil
