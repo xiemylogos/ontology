@@ -24,6 +24,7 @@ import (
 	"path"
 
 	"github.com/ontio/ontology/common"
+	"github.com/ontio/ontology/common/log"
 	exec "github.com/ontio/ontology/core/store"
 	"github.com/ontio/ontology/core/store/leveldbstore"
 	"github.com/ontio/ontology/core/types"
@@ -66,6 +67,7 @@ func (this *BlockCacheStore) PutBlock(block *types.Block, stateMerkleRoot common
 	if this.shardID.ToUint64() != block.Header.ShardID {
 		return fmt.Errorf("unmatched shard id: %d vs %d", this.shardID, block.Header.ShardID)
 	}
+	log.Infof("xiexie --height:%d", block.Header.Height)
 	mklKey := fmt.Sprintf("mkl-%d-%d", this.shardID.ToUint64(), block.Header.Height)
 	blkKey := fmt.Sprintf("blk-%d-%d", this.shardID.ToUint64(), block.Header.Height)
 	sink := common.NewZeroCopySink(0)
