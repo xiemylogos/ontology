@@ -517,22 +517,6 @@ func (this *BlockSyncMgr) OnBlockReceive(fromID uint64, blockSize uint32, block 
 	this.syncBlock()
 }
 
-func (this *BlockSyncMgr) OnAddBlock(height uint32) {
-	curBlockHeight := this.ledger.GetCurrentBlockHeight()
-	this.lock.Lock()
-	for height := range this.blocksCache {
-		if height <= curBlockHeight {
-			delete(this.blocksCache, height)
-		}
-	}
-	this.lock.Unlock()
-	if this.SaveSyncBlock(height) {
-		this.releaseSyncSaveBlockLock(true)
-	} else {
-		this.releaseSyncSaveBlockLock(false)
-	}
-}
-
 //OnAddNode to node list when a new node added
 func (this *BlockSyncMgr) OnAddNode(nodeId uint64) {
 	log.Debugf("[p2p]OnAddNode:%d", nodeId)

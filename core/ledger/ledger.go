@@ -179,13 +179,33 @@ func (self *Ledger) AddHeaders(headers []*types.Header) error {
 func (self *Ledger) AddBlock(block *types.Block, stateMerkleRoot common.Uint256) error {
 	if len(DefLedgerMgr.Ledgers) > 1 && self.ShardID.IsRootShard() {
 		return self.ChildLedger.ParentBlockCache.PutBlock(block, stateMerkleRoot)
-	} else {
-		err := self.ldgStore.AddBlock(block, stateMerkleRoot)
-		if err != nil {
-			log.Errorf("Ledger %d AddBlock BlockHeight:%d,%d BlockHash:%x error:%s", self.ShardID, block.Header.ShardID, block.Header.Height, block.Hash(), err)
-		}
-		return err
 	}
+
+	if self.ParentLedger != nil {
+		currentParentHeight := self.ParentLedger.GetCurrentBlockHeight()
+		if block.Header.ParentHeight > currentParentHeight {
+			// check if parent block available
+			for h := currentParentHeight + 1; h <= block.Header.ParentHeight; h++ {
+				if _, _, err := self.ParentBlockCache.GetBlock(h); err != nil {
+					return fmt.Errorf("shard %d get parent block %d failed: %s", self.ShardID, h, err)
+				}
+			}
+		}
+	}
+
+	// FIXME:
+	// 1. ExecuteBlock/SubmitBlock requires saving block
+	// 2. lock released and re-acquired after ExecuteBlock(block)
+	execResult, err := self.ExecuteBlock(block)
+	if err != nil {
+		return fmt.Errorf("shard %d execute block %d failed: %s", self.ShardID, block.Header.Height, err)
+	}
+
+	if err := self.SubmitBlock(block, execResult); err != nil {
+		return fmt.Errorf("shard %d submit block %d failed: %s", self.ShardID, block.Header.Height, err)
+	}
+
+	return nil
 }
 
 func (self *Ledger) ExecuteBlock(b *types.Block) (store.ExecuteResult, error) {
