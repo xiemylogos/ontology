@@ -75,6 +75,7 @@ type ChainManager struct {
 	lock       sync.RWMutex
 	shards     map[common.ShardID]*ShardInfo
 	mainLedger *ledger.Ledger
+	ledger     *ledger.Ledger
 	consensus  consensus.ConsensusService
 
 	account *account.Account
@@ -219,12 +220,14 @@ func (self *ChainManager) initShardLedger(shardInfo *ShardInfo) error {
 	if err != nil {
 		return fmt.Errorf("init shard ledger: %s", err)
 	}
+	self.ledger = lgr
 	bookKeepers, err := shardInfo.Config.GetBookkeepers()
 	if err != nil {
 		return fmt.Errorf("init shard ledger: GetBookkeepers error:%s", err)
 	}
 	genesisConfig := shardInfo.Config.Genesis
 	shardConfig := shardInfo.Config.Shard
+	shardConfig.GenesisParentHeight = lgr.GetParentHeight()
 	genesisBlock, err := genesis.BuildGenesisBlock(bookKeepers, genesisConfig, shardConfig)
 	if err != nil {
 		return fmt.Errorf("init shard ledger: genesisBlock error %s", err)
@@ -431,7 +434,7 @@ func (self *ChainManager) handleCrossShardMsg(payload *p2pmsg.CrossShardPayload)
 		log.Errorf("handleCrossShardMsg msgroot not match:%s", msg.CrossShardMsgInfo.CrossShardMsgRoot.ToHexString())
 		return
 	}
-	xshard.AddCrossShardInfo(ledger.DefLedger, msg)
+	xshard.AddCrossShardInfo(self.ledger, msg)
 }
 
 //
