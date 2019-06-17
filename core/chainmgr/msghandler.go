@@ -222,13 +222,13 @@ func (self *ChainManager) AddShardEventConfig(height uint32, shardID common.Shar
 	}
 	sink := common.ZeroCopySink{}
 	shardEvent.Serialization(&sink)
-	err := ledger.DefLedger.AddShardConsensusConfig(shardID, height, sink.Bytes())
+	err := self.ledger.AddShardConsensusConfig(shardID, height, sink.Bytes())
 	if err != nil {
 		log.Errorf("AddShardConsensusConfig err:%s", err)
 		return
 	}
 
-	heights, err := ledger.DefLedger.GetShardConsensusHeight(shardID)
+	heights, err := self.ledger.GetShardConsensusHeight(shardID)
 	if err != nil {
 		if err != com.ErrNotFound {
 			log.Errorf("GetShardConsensusHeight shardID:%v, err:%s", shardID, err)
@@ -238,7 +238,7 @@ func (self *ChainManager) AddShardEventConfig(height uint32, shardID common.Shar
 	heights_db := make([]uint32, 0)
 	heights_db = append(heights_db, heights...)
 	heights_db = append(heights_db, height)
-	err = ledger.DefLedger.AddShardConsensusHeight(shardID, heights_db)
+	err = self.ledger.AddShardConsensusHeight(shardID, heights_db)
 	if err != nil {
 		log.Errorf("AddShardConsensusHeight err:%s", err)
 		return
