@@ -183,7 +183,7 @@ func GetCrossShardTxs(lgr *ledger.Ledger, account *account.Account, FromShardID 
 	defer pool.lock.RUnlock()
 	crossShardInfo := make([]*types.CrossShardTxInfos, 0)
 	crossShardMapInfos := make(map[uint64][]*types.CrossShardTxInfos)
-	if !FromShardID.IsParentID() {
+	if FromShardID.IsRootShard() {
 		shardMsg, err := lgr.ParentLedger.GetShardMsgsInBlock(parentblkNum, FromShardID)
 		if err != nil {
 			if err != com.ErrNotFound {
