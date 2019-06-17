@@ -167,6 +167,9 @@ func (self *ChainManager) onBlockPersistCompleted(blk *types.Block) {
 	}
 }
 func (self *ChainManager) handleRootChainConfig(block *types.Block) error {
+	if config.DefConfig.Genesis.ConsensusType == config.CONSENSUS_TYPE_SOLO {
+		return nil
+	}
 	blkInfo := &vconfig.VbftBlockInfo{}
 	if err := json.Unmarshal(block.Header.ConsensusPayload, blkInfo); err != nil {
 		return fmt.Errorf("unmarshal blockInfo: %s", err)
