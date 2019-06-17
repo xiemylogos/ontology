@@ -200,7 +200,7 @@ func (self *ChainManager) initMainLedger(stateHashHeight uint32) error {
 	}
 	self.shards[mainShardID] = mainShardInfo
 	self.mainLedger = lgr
-	ledger.DefLedger = lgr
+	self.ledger = lgr
 	log.Infof("main ledger init success")
 	return nil
 }
@@ -220,7 +220,6 @@ func (self *ChainManager) initShardLedger(shardInfo *ShardInfo) error {
 	if err != nil {
 		return fmt.Errorf("init shard ledger: %s", err)
 	}
-	self.ledger = lgr
 	bookKeepers, err := shardInfo.Config.GetBookkeepers()
 	if err != nil {
 		return fmt.Errorf("init shard ledger: GetBookkeepers error:%s", err)
