@@ -733,7 +733,7 @@ func CommitDpos(native *native.NativeService) ([]byte, error) {
 	if err := shard.UpdateDposInfo(native); err != nil {
 		return utils.BYTE_FALSE, fmt.Errorf("CommitDpos: failed, err: %s", err)
 	}
-
+	log.Infof("xiexie CommitDpos")
 	evt := &shardstates.ConfigShardEvent{
 		Height: native.Height,
 		Config: shard.Config,
@@ -776,6 +776,7 @@ func NotifyShardCommitDpos(native *native.NativeService) ([]byte, error) {
 }
 
 func ShardCommitDpos(native *native.NativeService) ([]byte, error) {
+	log.Infof("xiexie --------ShardCommitDpos")
 	if native.ShardID.ParentID() == native.ShardID {
 		return utils.BYTE_FALSE, fmt.Errorf("ShardCommitDpos: only can be invoked at child shard")
 	}
