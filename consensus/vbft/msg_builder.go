@@ -206,6 +206,7 @@ func (self *Server) constructBlock(blkNum uint32, prevBlkHash common.Uint256, tx
 		if err != nil {
 			log.Errorf("GetCrossShardTxs err:%s", err)
 		}
+		log.Infof("xiexie shardTxs len:%d,shardID:%v", len(shardTxs), self.ShardID)
 	}
 	blkHeader := &types.Header{
 		PrevBlockHash:    prevBlkHash,
