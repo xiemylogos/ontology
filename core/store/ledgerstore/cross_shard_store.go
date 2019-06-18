@@ -81,7 +81,10 @@ func (this *CrossShardStore) GetCrossShardMsgByHash(msgHash common.Uint256) (*ty
 	}
 	source := common.NewZeroCopySource(data)
 	crossShardMsg := &types.CrossShardMsg{}
-	crossShardMsg.Deserialization(source)
+	err = crossShardMsg.Deserialization(source)
+	if err != nil {
+		return nil, err
+	}
 	return crossShardMsg, nil
 }
 

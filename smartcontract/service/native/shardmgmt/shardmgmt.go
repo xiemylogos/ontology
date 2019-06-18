@@ -20,7 +20,6 @@ package shardmgmt
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"math"
 	"math/big"
@@ -879,9 +878,6 @@ func GetShardCommitDPosInfo(native *native.NativeService) ([]byte, error) {
 	if err != nil {
 		return utils.BYTE_FALSE, fmt.Errorf("GetShardCommitDPosInfo: failed, err: %s", err)
 	}
-	data, err := json.Marshal(info)
-	if err != nil {
-		return utils.BYTE_FALSE, fmt.Errorf("GetShardCommitDPosInfo: marshal info failed, err: %s", err)
-	}
-	return data, nil
+	data := fmt.Sprintf("%v", info)
+	return []byte(data), nil
 }
