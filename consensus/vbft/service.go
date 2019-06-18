@@ -1246,6 +1246,9 @@ func (self *Server) verifyCrossShardTx(msg *blockProposalMsg) bool {
 	for _, crossTxMsgs := range msg.Block.Block.ShardTxs {
 		for _, crossTxMsg := range crossTxMsgs {
 			//verify msg sign
+			if crossTxMsg.ShardMsg == nil {
+				continue
+			}
 			chainconfig, err := getShardConfigByShardID(self.ledger, crossTxMsg.ShardMsg.FromShardID, crossTxMsg.ShardMsg.SignMsgHeight)
 			if err != nil {
 				if err != com.ErrNotFound {

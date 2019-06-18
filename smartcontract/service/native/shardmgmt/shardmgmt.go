@@ -699,6 +699,7 @@ func CommitDpos(native *native.NativeService) ([]byte, error) {
 	if err != nil {
 		return utils.BYTE_FALSE, fmt.Errorf("CommitDpos: failed, err: %s", err)
 	}
+	log.Infof("xiexie param.Height:%d,shardCurrentView.Height:%d,maxview:%d", param.Height, shardCurrentView.Height, shard.Config.VbftCfg.MaxBlockChangeView)
 	if param.ForceCommit {
 		if err := utils.ValidateOwner(native, shard.Creator); err != nil {
 			return utils.BYTE_FALSE, fmt.Errorf("CommitDpos: checkwitness failed, err: %s", err)
@@ -706,7 +707,8 @@ func CommitDpos(native *native.NativeService) ([]byte, error) {
 	} else if !native.ContextRef.CheckCallShard(param.ShardId) {
 		return utils.BYTE_FALSE, fmt.Errorf("CommitDpos: only can be invoked by ShardCall")
 	} else if param.Height < shardCurrentView.Height ||
-		param.Height-shardCurrentView.Height < shard.Config.VbftCfg.MaxBlockChangeView {
+		shardCurrentView.Height > 0 && param.Height-shardCurrentView.Height < shard.Config.VbftCfg.MaxBlockChangeView ||
+		shardCurrentView.Height == 0 && param.Height-shardCurrentView.Height+1 < shard.Config.VbftCfg.MaxBlockChangeView {
 		return utils.BYTE_FALSE, fmt.Errorf("CommitDpos: shard height not enough")
 	}
 	quitPeers := make([]string, 0)
@@ -733,7 +735,6 @@ func CommitDpos(native *native.NativeService) ([]byte, error) {
 	if err := shard.UpdateDposInfo(native); err != nil {
 		return utils.BYTE_FALSE, fmt.Errorf("CommitDpos: failed, err: %s", err)
 	}
-	log.Infof("xiexie CommitDpos")
 	evt := &shardstates.ConfigShardEvent{
 		Height: native.Height,
 		Config: shard.Config,
@@ -744,6 +745,7 @@ func CommitDpos(native *native.NativeService) ([]byte, error) {
 	AddNotification(native, contract, evt)
 	setShardState(native, contract, shard)
 	native.NotifyRemoteShard(shardId, contract, SHARD_COMMIT_DPOS, []byte{})
+	log.Infof("xiexie CommitDpos end")
 	return utils.BYTE_TRUE, nil
 }
 
