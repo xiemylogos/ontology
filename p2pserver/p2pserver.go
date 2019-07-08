@@ -536,6 +536,10 @@ func (this *P2PServer) ping() {
 		heightInfo := &msgtypes.HeightInfo{
 			Height: syncer.ledger.GetCurrentBlockHeight(),
 		}
+		hash, err := syncer.ledger.GetCrossShardHash(shardID)
+		if err != nil {
+			heightInfo.MsgHash = hash
+		}
 		heights[shardID] = heightInfo
 	}
 	this.network.SetHeight(heights)
@@ -547,12 +551,13 @@ func (this *P2PServer) ping() {
 //pings send pkgs to get pong msg from others
 func (this *P2PServer) PingTo(peers []*peer.Peer) {
 	heights := make(map[comm.ShardID]*msgtypes.HeightInfo)
-
 	for id, syncer := range this.blockSyncers {
 		heightInfo := &msgtypes.HeightInfo{
 			Height: syncer.ledger.GetCurrentBlockHeight(),
-			//todo
-			//msgHash
+		}
+		hash, err := syncer.ledger.GetShardMsgHash(id)
+		if err != nil {
+			heightInfo.MsgHash = hash
 		}
 		heights[id] = heightInfo
 	}

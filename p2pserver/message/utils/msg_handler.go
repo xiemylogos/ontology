@@ -39,6 +39,7 @@ import (
 	"github.com/ontio/ontology/p2pserver/message/msg_pack"
 	msgTypes "github.com/ontio/ontology/p2pserver/message/types"
 	"github.com/ontio/ontology/p2pserver/net/protocol"
+	"github.com/ontio/ontology/p2pserver/peer"
 )
 
 //respCache cache for some response data
@@ -144,6 +145,7 @@ func PongHandle(data *msgTypes.MsgPayload, p2p p2p.P2P, pid *evtActor.PID, args 
 		return
 	}
 	remotePeer.SetHeight(pong.Height)
+	handlePongMsgHash(p2p, remotePeer, pong.Height)
 }
 
 // BlkHeaderHandle handles the sync headers from peer
@@ -718,6 +720,61 @@ func GetHeadersFromHash(shardId common.ShardID, startHash common.Uint256, stopHa
 	}
 
 	return headers, nil
+}
+
+func getShardMsgHashByShardID(shardId common.ShardID) (common.Uint256, error) {
+	db := ledger.GetShardLedger(shardId)
+	if db == nil {
+		return common.Uint256{}, fmt.Errorf("can not get ledger for shardid: %d", shardId)
+	}
+	return db.GetShardMsgHash(shardId)
+}
+
+func getCrossShardMsg(shardId common.ShardID, hash common.Uint256) (*types.CrossShardMsg, error) {
+	db := ledger.GetShardLedger(shardId)
+	if db == nil {
+		return nil, fmt.Errorf("can not get ledger for shardid: %d", shardId)
+	}
+	return db.GetCrossShardMsgByHash(hash)
+}
+
+func handlePongMsgHash(p2p p2p.P2P, remotePeer *peer.Peer, heights map[common.ShardID]*msgTypes.HeightInfo) {
+	for shardID, heightInfo := range heights {
+		hash, err := getShardMsgHashByShardID(shardID)
+		if err != nil {
+			log.Errorf("GetShardMsgHashByShardID shardID:%v,err:%s", shardID, err)
+			return
+		}
+		if hash == heightInfo.MsgHash {
+			return
+		}
+		for {
+			shardMsg, err := getCrossShardMsg(shardID, hash)
+			if err != nil {
+				log.Errorf("GetCrossShardMsg shardID:%v,hash:%s,err:%s", shardID, hash, err)
+				return
+			}
+			sink := common.ZeroCopySink{}
+			shardMsg.Serialization(&sink)
+			payload := &msgTypes.CrossShard{
+				Cons: msgTypes.CrossShardPayload{
+					Version: common.VERSION_SUPPORT_SHARD,
+					ShardID: shardID,
+					Data:    sink.Bytes(),
+				},
+			}
+			//send cross shard msg to remote peer
+			err = p2p.Send(remotePeer, payload)
+			if err != nil {
+				log.Warn(err)
+				return
+			}
+			hash := shardMsg.CrossShardMsgInfo.PreCrossShardMsgHash
+			if hash == heightInfo.MsgHash {
+				return
+			}
+		}
+	}
 }
 
 //getRespCacheValue get response data from cache

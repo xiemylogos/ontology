@@ -494,11 +494,11 @@ func (self *Server) SendCrossShardMsgToAll(height uint32) {
 		// broadcast
 		sink := common.ZeroCopySink{}
 		msg.Serialization(&sink)
-		msg := &p2pmsg.CrossShardPayload{
+		payload := &p2pmsg.CrossShardPayload{
 			Version: common.VERSION_SUPPORT_SHARD,
 			ShardID: targetShardID,
 			Data:    sink.Bytes(),
 		}
-		self.p2p.Broadcast(msg)
+		self.p2p.Broadcast(payload)
 	}
 }
