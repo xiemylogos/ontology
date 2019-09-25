@@ -20,6 +20,7 @@ package vbft
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"math"
 	"reflect"
@@ -33,7 +34,7 @@ import (
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/log"
 	actorTypes "github.com/ontio/ontology/consensus/actor"
-	"github.com/ontio/ontology/consensus/vbft/config"
+	vconfig "github.com/ontio/ontology/consensus/vbft/config"
 	"github.com/ontio/ontology/core/ledger"
 	"github.com/ontio/ontology/core/payload"
 	"github.com/ontio/ontology/core/types"
@@ -1078,6 +1079,11 @@ func (self *Server) onConsensusMsg(peerIdx uint32, msg ConsensusMsg, msgHash com
 	}
 }
 
+func printMemdb(key, val []byte) {
+	log.Errorf("printMemdb key:%s val:%s", hex.EncodeToString(key), hex.EncodeToString(val))
+	return
+}
+
 func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 	msgBlkNum := msg.GetBlockNum()
 	blk, prevBlkHash := self.blockPool.getSealedBlock(msg.GetBlockNum() - 1)
@@ -1104,6 +1110,9 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 	if msg.Block.getPrevBlockMerkleRoot() != merkleRoot {
 		self.msgPool.DropMsg(msg)
 		msgMerkleRoot := msg.Block.getPrevBlockMerkleRoot()
+		execResult := self.blockPool.getExecResult(msgBlkNum - 1)
+		log.Errorf("blockNum:%d,hash:%s,merkleRoot:%s", msgBlkNum-1, execResult.Hash.ToHexString(), execResult.MerkleRoot.ToHexString())
+		execResult.WriteSet.ForEach(printMemdb)
 		log.Errorf("BlockPrposalMessage check MerkleRoot blocknum:%d,msg MerkleRoot:%s,self MerkleRoot:%s", msg.GetBlockNum(), msgMerkleRoot.ToHexString(), merkleRoot.ToHexString())
 		return
 	}

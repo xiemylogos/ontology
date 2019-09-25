@@ -92,6 +92,13 @@ func (self *ChainStore) getExecWriteSet(blkNum uint32) *overlaydb.MemDB {
 	return nil
 }
 
+func (self *ChainStore) getExecResult(blkNum uint32) *store.ExecuteResult {
+	if blk, present := self.pendingBlocks[blkNum]; blk != nil && present {
+		return blk.execResult
+	}
+	return nil
+}
+
 func (self *ChainStore) ReloadFromLedger() {
 	height := self.db.GetCurrentBlockHeight()
 	if height > self.chainedBlockNum {

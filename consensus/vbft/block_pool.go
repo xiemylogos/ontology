@@ -28,6 +28,7 @@ import (
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/log"
+	"github.com/ontio/ontology/core/store"
 	"github.com/ontio/ontology/core/store/overlaydb"
 )
 
@@ -767,6 +768,12 @@ func (pool *BlockPool) getExecWriteSet(blkNum uint32) *overlaydb.MemDB {
 	pool.lock.RLock()
 	defer pool.lock.RUnlock()
 	return pool.chainStore.getExecWriteSet(blkNum)
+}
+
+func (pool *BlockPool) getExecResult(blkNum uint32) *store.ExecuteResult {
+	pool.lock.RLock()
+	defer pool.lock.RUnlock()
+	return pool.chainStore.getExecResult(blkNum)
 }
 
 func (pool *BlockPool) submitBlock(blkNum uint32) error {
