@@ -122,6 +122,27 @@ func (self *ChainStore) AddBlock(block *Block) error {
 	if block.Block.Header == nil {
 		panic("nil block header")
 	}
+
+	height := self.db.GetCurrentBlockHeight()
+	if self.chainedBlockNum < height {
+		for h := self.chainedBlockNum + 1; h < height; h++ {
+			if _, present := self.pendingBlocks[h]; !present {
+				block, err := self.getBlock(h)
+				if err != nil {
+					log.Warnf("chainstore getblock err:%s", err)
+					break
+				}
+				execResult, err := self.db.ExecuteBlock(block.Block)
+				if err != nil {
+					log.Warnf("chainstore executeblock err:%s", err)
+					break
+				}
+				self.pendingBlocks[h] = &PendingBlock{block: block, execResult: &execResult, hasSubmitted: false}
+			}
+		}
+		self.chainedBlockNum = height
+	}
+
 	blkNum := self.GetChainedBlockNum() + 1
 	err := self.submitBlock(blkNum - 1)
 	if err != nil {
