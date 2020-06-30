@@ -477,9 +477,14 @@ func (this *LedgerStoreImp) verifyHeader(header *types.Header, vbftPeerInfo map[
 		if blkInfo.NewChainConfig != nil {
 			peerInfo := make(map[string]uint32)
 			for _, p := range blkInfo.NewChainConfig.Peers {
+				log.Infof("xiexie udpateChainConfig verifyHeader ID:%v,index:%v",p.ID,p.Index)
 				peerInfo[p.ID] = p.Index
 			}
 			return peerInfo, nil
+		} else {
+			for k,v := range vbftPeerInfo {
+				log.Infof("xiexie old verifyHeader ID:%v,index:%v",k,v)
+			}
 		}
 		return vbftPeerInfo, nil
 	} else {
