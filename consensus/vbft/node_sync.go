@@ -23,9 +23,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ontio/ontology/common"
-	"github.com/ontio/ontology/common/log"
-	"github.com/ontio/ontology/core/ledger"
+	"github.com/xiemylogos/ontology/v2/common"
+	"github.com/xiemylogos/ontology/v2/common/log"
+	"github.com/xiemylogos/ontology/v2/core/ledger"
 )
 
 type SyncCheckReq struct {

@@ -21,14 +21,14 @@ import (
 	"sync"
 
 	lru "github.com/hashicorp/golang-lru"
-	"github.com/ontio/ontology/common"
-	"github.com/ontio/ontology/common/config"
-	"github.com/ontio/ontology/core/types"
-	"github.com/ontio/ontology/errors"
-	"github.com/ontio/ontology/smartcontract/context"
-	"github.com/ontio/ontology/smartcontract/event"
-	"github.com/ontio/ontology/smartcontract/states"
-	"github.com/ontio/ontology/smartcontract/storage"
+	"github.com/xiemylogos/ontology/v2/common"
+	"github.com/xiemylogos/ontology/v2/common/config"
+	"github.com/xiemylogos/ontology/v2/core/types"
+	"github.com/xiemylogos/ontology/v2/errors"
+	"github.com/xiemylogos/ontology/v2/smartcontract/context"
+	"github.com/xiemylogos/ontology/v2/smartcontract/event"
+	"github.com/xiemylogos/ontology/v2/smartcontract/states"
+	"github.com/xiemylogos/ontology/v2/smartcontract/storage"
 	"github.com/ontio/wagon/exec"
 )
 

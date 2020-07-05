@@ -1,7 +1,7 @@
 GOFMT=gofmt
 GC=go build
 VERSION := $(shell git describe --always --tags --long)
-BUILD_NODE_PAR = -ldflags "-w -X github.com/ontio/ontology/common/config.Version=$(VERSION)" #-race
+BUILD_NODE_PAR = -ldflags "-w -X github.com/xiemylogos/ontology/v2/common/config.Version=$(VERSION)" #-race
 
 ARCH=$(shell uname -m)
 DBUILD=docker build
@@ -77,7 +77,7 @@ docker/build/bin/%: Makefile
 		-v $(abspath docker/build/bin):/go/bin \
 		-v $(abspath docker/build/pkg):/go/pkg \
 		-v $(GOPATH)/src:/go/src \
-		-w /go/src/github.com/ontio/ontology \
+		-w /go/src/github.com/xiemylogos/ontology/v2 \
 		golang:1.9.5-stretch \
 		$(GC)  $(BUILD_NODE_PAR) -o docker/build/bin/ontology main.go
 	@touch $@

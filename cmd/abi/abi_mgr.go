@@ -24,7 +24,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/ontio/ontology/common/log"
+	"github.com/xiemylogos/ontology/v2/common/log"
 )
 
 var DefAbiMgr = NewAbiMgr()

@@ -20,7 +20,7 @@ package types
 import (
 	"testing"
 
-	"github.com/ontio/ontology/p2pserver/common"
+	"github.com/xiemylogos/ontology/v2/p2pserver/common"
 )
 
 func TestFindNodeRequest(t *testing.T) {

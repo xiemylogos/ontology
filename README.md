@@ -15,7 +15,7 @@ Ontology is a high-performance public blockchain project and distributed trust c
 
 As a public blockchain project, Ontology is currently maintained by both the Ontology core tech team and community members who can all support you in development. There are many available tools for use for development - SDKs, the SmartX IDE, Ontology blockchain explorer and more.
 
-New features are still being rapidly developed, therefore the master branch may be unstable. Stable versions can be found in the [releases section](https://github.com/ontio/ontology/releases).
+New features are still being rapidly developed, therefore the master branch may be unstable. Stable versions can be found in the [releases section](https://github.com/xiemylogos/ontology/v2/releases).
 
 ## Features
 
@@ -33,7 +33,7 @@ New features are still being rapidly developed, therefore the master branch may 
 You can download a stable compiled version of the Ontology node software by either:
 
 - Downloading the latest Ontology binary file with `curl https://dev.ont.io/ontology_install | sh`.
-- Downloading a specific version from the [release section](https://github.com/ontio/ontology/releases).
+- Downloading a specific version from the [release section](https://github.com/xiemylogos/ontology/v2/releases).
 
 ## Build From Source
 
@@ -59,7 +59,7 @@ After building the source code successfully, you should see two executable progr
 
 ## Run Ontology
 
-The Ontology CLI can run nodes for the MainNet, TestNet and local PrivateNet. Check out the [Ontology CLI user guide](https://github.com/ontio/ontology/blob/master/docs/specifications/cli_user_guide.md) for a full list of commands.
+The Ontology CLI can run nodes for the MainNet, TestNet and local PrivateNet. Check out the [Ontology CLI user guide](https://github.com/xiemylogos/ontology/v2/blob/master/docs/specifications/cli_user_guide.md) for a full list of commands.
 
 ### MainNet Sync Node
 
@@ -214,7 +214,7 @@ For further examples, please refer to the [CLI User Guide](https://ontio.github.
 
 ## Contributions
 
-Contributors to Ontology are very welcome! Before beginning, please take a look at our [contributing guidelines](CONTRIBUTING.md). You can open an issue by [clicking here](https://github.com/ontio/ontology/issues/new).
+Contributors to Ontology are very welcome! Before beginning, please take a look at our [contributing guidelines](CONTRIBUTING.md). You can open an issue by [clicking here](https://github.com/xiemylogos/ontology/v2/issues/new).
 
 If you have any issues getting setup, open an issue or reach out in the [Ontology Discord](https://discordapp.com/invite/4TQujHj).
 

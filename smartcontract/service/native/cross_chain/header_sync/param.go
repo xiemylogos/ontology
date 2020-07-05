@@ -21,8 +21,8 @@ package header_sync
 import (
 	"fmt"
 
-	"github.com/ontio/ontology/common"
-	"github.com/ontio/ontology/smartcontract/service/native/utils"
+	"github.com/xiemylogos/ontology/v2/common"
+	"github.com/xiemylogos/ontology/v2/smartcontract/service/native/utils"
 )
 
 type SyncBlockHeaderParam struct {

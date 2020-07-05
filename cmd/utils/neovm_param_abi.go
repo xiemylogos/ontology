@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ontio/ontology/cmd/abi"
+	"github.com/xiemylogos/ontology/v2/cmd/abi"
 )
 
 func NewNeovmContractAbi(abiData []byte) (*abi.NeovmContractAbi, error) {

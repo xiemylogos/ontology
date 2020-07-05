@@ -23,9 +23,9 @@ import (
 	"time"
 
 	"github.com/ontio/ontology-eventbus/actor"
-	"github.com/ontio/ontology/core/types"
-	ontErrors "github.com/ontio/ontology/errors"
-	txpool "github.com/ontio/ontology/txnpool/common"
+	"github.com/xiemylogos/ontology/v2/core/types"
+	ontErrors "github.com/xiemylogos/ontology/v2/errors"
+	txpool "github.com/xiemylogos/ontology/v2/txnpool/common"
 )
 
 type TxPoolActor struct {

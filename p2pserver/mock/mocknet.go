@@ -26,7 +26,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/ontio/ontology/p2pserver/common"
+	"github.com/xiemylogos/ontology/v2/p2pserver/common"
 )
 
 func init() {

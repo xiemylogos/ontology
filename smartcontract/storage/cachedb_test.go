@@ -21,9 +21,9 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/ontio/ontology/core/store/common"
-	"github.com/ontio/ontology/core/store/leveldbstore"
-	"github.com/ontio/ontology/core/store/overlaydb"
+	"github.com/xiemylogos/ontology/v2/core/store/common"
+	"github.com/xiemylogos/ontology/v2/core/store/leveldbstore"
+	"github.com/xiemylogos/ontology/v2/core/store/overlaydb"
 	"github.com/stretchr/testify/assert"
 )
 

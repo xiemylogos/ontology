@@ -22,10 +22,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ontio/ontology/core/ledger"
-	"github.com/ontio/ontology/core/signature"
-	"github.com/ontio/ontology/core/types"
-	ontErrors "github.com/ontio/ontology/errors"
+	"github.com/xiemylogos/ontology/v2/core/ledger"
+	"github.com/xiemylogos/ontology/v2/core/signature"
+	"github.com/xiemylogos/ontology/v2/core/types"
+	ontErrors "github.com/xiemylogos/ontology/v2/errors"
 )
 
 // VerifyBlock checks whether the block is valid

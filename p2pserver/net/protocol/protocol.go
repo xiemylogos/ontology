@@ -18,8 +18,8 @@
 package p2p
 
 import (
-	"github.com/ontio/ontology/p2pserver/message/types"
-	"github.com/ontio/ontology/p2pserver/peer"
+	"github.com/xiemylogos/ontology/v2/p2pserver/message/types"
+	"github.com/xiemylogos/ontology/v2/p2pserver/peer"
 )
 
 type Context struct {

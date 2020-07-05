@@ -27,7 +27,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/ontio/ontology/cmd/utils"
+	"github.com/xiemylogos/ontology/v2/cmd/utils"
 	"github.com/urfave/cli"
 )
 

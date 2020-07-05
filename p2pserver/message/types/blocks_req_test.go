@@ -20,7 +20,7 @@ package types
 import (
 	"testing"
 
-	cm "github.com/ontio/ontology/common"
+	cm "github.com/xiemylogos/ontology/v2/common"
 )
 
 func TestBlkReqSerializationDeserialization(t *testing.T) {

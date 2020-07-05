@@ -20,7 +20,7 @@ package ontid
 import (
 	"testing"
 
-	"github.com/ontio/ontology/smartcontract/service/native"
+	"github.com/xiemylogos/ontology/v2/smartcontract/service/native"
 )
 
 func TestQueryDocument(t *testing.T) {

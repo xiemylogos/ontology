@@ -22,7 +22,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/ontio/ontology/common/log"
+	"github.com/xiemylogos/ontology/v2/common/log"
 )
 
 const (

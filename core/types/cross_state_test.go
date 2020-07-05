@@ -20,7 +20,7 @@ package types
 import (
 	"testing"
 
-	"github.com/ontio/ontology/common"
+	"github.com/xiemylogos/ontology/v2/common"
 	"github.com/stretchr/testify/assert"
 )
 

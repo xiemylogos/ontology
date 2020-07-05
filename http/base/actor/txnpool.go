@@ -24,11 +24,11 @@ import (
 	"time"
 
 	"github.com/ontio/ontology-eventbus/actor"
-	"github.com/ontio/ontology/common"
-	"github.com/ontio/ontology/common/log"
-	"github.com/ontio/ontology/core/types"
-	ontErrors "github.com/ontio/ontology/errors"
-	tcomn "github.com/ontio/ontology/txnpool/common"
+	"github.com/xiemylogos/ontology/v2/common"
+	"github.com/xiemylogos/ontology/v2/common/log"
+	"github.com/xiemylogos/ontology/v2/core/types"
+	ontErrors "github.com/xiemylogos/ontology/v2/errors"
+	tcomn "github.com/xiemylogos/ontology/v2/txnpool/common"
 )
 
 var txnPid *actor.PID

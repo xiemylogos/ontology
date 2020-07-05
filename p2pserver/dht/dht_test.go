@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ontio/ontology/p2pserver/common"
+	"github.com/xiemylogos/ontology/v2/p2pserver/common"
 	"github.com/stretchr/testify/assert"
 )
 

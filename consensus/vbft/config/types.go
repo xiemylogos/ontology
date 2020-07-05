@@ -24,7 +24,7 @@ import (
 	"fmt"
 
 	"github.com/ontio/ontology-crypto/keypair"
-	"github.com/ontio/ontology/core/types"
+	"github.com/xiemylogos/ontology/v2/core/types"
 )
 
 // PubkeyID returns a marshaled representation of the given public key.

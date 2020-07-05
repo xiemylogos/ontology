@@ -22,7 +22,7 @@ import (
 	"io"
 
 	"github.com/ontio/ontology-crypto/keypair"
-	"github.com/ontio/ontology/common"
+	"github.com/xiemylogos/ontology/v2/common"
 )
 
 type VoteState struct {

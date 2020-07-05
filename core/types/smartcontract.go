@@ -18,7 +18,7 @@
 
 package types
 
-import "github.com/ontio/ontology/common"
+import "github.com/xiemylogos/ontology/v2/common"
 
 type SmartCodeEvent struct {
 	TxHash common.Uint256
