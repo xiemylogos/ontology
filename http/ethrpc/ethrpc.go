@@ -57,8 +57,8 @@ type EthereumAPI struct {
 	txpool TxPoolService
 }
 
-func NewEthereumAPI(txpool TxPoolService) EthereumAPI {
-	return EthereumAPI{txpool: txpool}
+func NewEthereumAPI(txpool TxPoolService) *EthereumAPI {
+	return &EthereumAPI{txpool: txpool}
 }
 
 func (api *EthereumAPI) ChainId() hexutil.Uint64 {
@@ -252,7 +252,7 @@ func (api *EthereumAPI) SendRawTransaction(data hexutil.Bytes) (common.Hash, err
 	txhash := eip155tx.Hash()
 	if errCode, desc := bcomn.SendTxToPool(eip155tx); errCode != ontErrors.ErrNoError {
 		log.Warnf("SendRawTransaction verified %s error: %s", txhash.ToHexString(), desc)
-		return common.Hash{}, err
+		return common.Hash{}, fmt.Errorf(desc)
 	}
 	return common.Hash(txhash), nil
 }

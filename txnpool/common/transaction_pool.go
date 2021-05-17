@@ -139,6 +139,10 @@ func (tp *TXPool) GetTxPool(byCount bool, height uint32) ([]*VerifiedTx, []*type
 	for _, txEntry := range tp.txList {
 		orderByFee = append(orderByFee, txEntry)
 	}
+	//this make EIP155 > other tx type
+	//for EIP155 case:
+	//if payer is same , order by nonce 0,1,2...
+	//otherwise , order by gas price
 	sort.Sort(OrderByNetWorkFee(orderByFee))
 
 	count := int(config.DefConfig.Consensus.MaxTxInBlock)
@@ -152,7 +156,7 @@ func (tp *TXPool) GetTxPool(byCount bool, height uint32) ([]*VerifiedTx, []*type
 	txList := make([]*VerifiedTx, 0, count)
 	oldTxList := make([]*types.Transaction, 0)
 	for _, txEntry := range orderByFee {
-		if !tp.isVerfiyExpired(txEntry, height) {
+		if tp.isVerfiyExpired(txEntry, height) {
 			oldTxList = append(oldTxList, txEntry.Tx)
 			continue
 		}
