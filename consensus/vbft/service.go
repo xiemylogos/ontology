@@ -1096,6 +1096,12 @@ func (self *Server) verifyCrossChainMsg(msg *blockProposalMsg) bool {
 
 func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 	msgBlkNum := msg.GetBlockNum()
+	completedBlockNum := self.GetCompletedBlockNum()
+	if msgBlkNum <= completedBlockNum {
+		log.Warn("processProposalMsg failed to MsgBlockNum:%d,CompletedBlockNum:%d",msgBlkNum,completedBlockNum)
+		return
+	}
+
 	blk, prevBlkHash := self.blockPool.getSealedBlock(msg.GetBlockNum() - 1)
 	if blk == nil {
 		log.Errorf("BlockProposal failed to GetPreBlock:%d", msg.GetBlockNum()-1)
