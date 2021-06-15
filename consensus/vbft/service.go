@@ -1096,8 +1096,10 @@ func (self *Server) verifyCrossChainMsg(msg *blockProposalMsg) bool {
 
 func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 	msgBlkNum := msg.GetBlockNum()
-	if msgBlkNum <= self.GetCompletedBlockNum() {
-		log.Errorf("BlockProposal failed to MsgBlockNum:%d,CompletedBlockNum:%d", msgBlkNum, self.GetCompletedBlockNum())
+	completedBlockNum := self.GetCompletedBlockNum()
+	log.Infof("processProposalMsg  MsgBlockNum:%d,CompletedBlockNum:%d", msgBlkNum,completedBlockNum)
+	if msgBlkNum <= completedBlockNum {
+		log.Errorf("BlockProposal failed to MsgBlockNum:%d,CompletedBlockNum:%d", msgBlkNum, completedBlockNum)
 		return
 	}
 	blk, prevBlkHash := self.blockPool.getSealedBlock(msg.GetBlockNum() - 1)
@@ -1183,7 +1185,7 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 		} else {
 			self.incrValidator.Clean()
 			//log.Infof("incr validator block height %v != ledger block height %v", int(end)-1, height)
-			log.Infof("incr validator block height %v != ledger block height %v, CompletedBlockNum:%d", int(end)-1, height, self.GetCompletedBlockNum())
+			log.Infof("incr validator block height %v != ledger block height %v,GetBlockNum:%d, CompletedBlockNum:%d", int(end)-1, height,msg.GetBlockNum(), completedBlockNum)
 		}
 		// start new routine to verify txs in proposal block
 		go func() {
