@@ -1175,10 +1175,13 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 		return
 	}
 	txs := msg.Block.Block.Transactions
-	if len(txs) > 0 && self.nonSystxs(txs, msgBlkNum) && msg.GetBlockNum() > self.GetCompletedBlockNum() {
+	if len(txs) > 0 && self.nonSystxs(txs, msgBlkNum)  {
 		height := msgBlkNum - 1
 		start, end := self.incrValidator.BlockRange()
-
+		if  msg.GetBlockNum() <= self.GetCompletedBlockNum() {
+			log.Warn("BlockProposal failed to MsgBlockNum:%d,CompletedBlockNum:%d",  msg.GetBlockNum(), self.GetCompletedBlockNum())
+			return
+		}
 		validHeight := height
 		if height+1 == end {
 			validHeight = start
