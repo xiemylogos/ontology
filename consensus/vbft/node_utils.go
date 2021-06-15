@@ -37,6 +37,7 @@ func (self *Server) GetCompletedBlockNum() uint32 {
 
 func (self *Server) SetCompletedBlockNum(blknum uint32) {
 	atomic.StoreUint32(&self.completedBlockNum, blknum)
+	log.Infof("completedBlockNum:%d,blockNum:%d",self.completedBlockNum,blknum)
 }
 
 func (self *Server) GetCurrentBlockNo() uint32 {
