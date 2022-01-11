@@ -20,6 +20,8 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
+	"io/ioutil"
 	"fmt"
 	"os"
 	"os/signal"
@@ -39,6 +41,7 @@ import (
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
 	"github.com/ontio/ontology/common/log"
+	"github.com/ontio/ontology/common/password"
 	"github.com/ontio/ontology/consensus"
 	"github.com/ontio/ontology/core/genesis"
 	"github.com/ontio/ontology/core/ledger"
