@@ -20,7 +20,9 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -39,6 +41,7 @@ import (
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
 	"github.com/ontio/ontology/common/log"
+	"github.com/ontio/ontology/common/password"
 	"github.com/ontio/ontology/consensus"
 	"github.com/ontio/ontology/core/genesis"
 	"github.com/ontio/ontology/core/ledger"
@@ -157,7 +160,13 @@ func startOntology(ctx *cli.Context) {
 
 	//set check transaction chainId
 	types.CheckChainID = true
-
+	var err error
+	accounts, err := LoadUserAccount(ctx)
+	if err != nil {
+		log.Errorf("load accounts err:%s", err)
+		panic(err)
+	}
+	account.DefAccs = accounts
 	cfg, err := initConfig(ctx)
 	if err != nil {
 		log.Errorf("initConfig error: %s", err)
@@ -494,4 +503,51 @@ func waitToExit(db *ledger.Ledger) {
 		}
 	}()
 	<-exit
+}
+
+func GetAccountByPassword(ctx *cli.Context, path string) (*account.Account, bool) {
+	wallet, err := account.Open(path)
+	if err != nil {
+		log.Error("open wallet error:", err)
+		return nil, false
+	}
+	pwd, err := password.GetPassword()
+	if err != nil {
+		log.Error("getPassword error:", err)
+		return nil, false
+	}
+	defer cmdcom.ClearPasswd(pwd)
+	user, err := wallet.GetDefaultAccount(pwd)
+	if err != nil {
+		log.Error("getDefaultAccount error:", err)
+		return nil, false
+	}
+	return user, true
+}
+
+type ConfigParam struct {
+	Path []string
+}
+
+func LoadUserAccount(ctx *cli.Context) ([]*account.Account, error) {
+	data, err := ioutil.ReadFile("./wallet_config.json")
+	if err != nil {
+		log.Errorf("ioutil.ReadFile failed ", err)
+		return nil, err
+	}
+	configParam := new(ConfigParam)
+	err = json.Unmarshal(data, configParam)
+	if err != nil {
+		log.Error("json.Unmarshal failed ", err)
+		return nil, err
+	}
+	var accs []*account.Account
+	for _, path := range configParam.Path {
+		user, ok := GetAccountByPassword(ctx, path)
+		if !ok {
+			return nil, fmt.Errorf("pwd error")
+		}
+		accs = append(accs, user)
+	}
+	return accs, nil
 }
