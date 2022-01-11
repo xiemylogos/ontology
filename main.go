@@ -21,8 +21,8 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -544,7 +544,7 @@ func LoadUserAccount(ctx *cli.Context) ([]*account.Account, error) {
 	for _, path := range configParam.Path {
 		user, ok := GetAccountByPassword(ctx, path)
 		if !ok {
-			return nil, err
+			return nil, fmt.Errorf("pwd error")
 		}
 		accs = append(accs, user)
 	}
