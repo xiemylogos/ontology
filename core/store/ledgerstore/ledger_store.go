@@ -953,7 +953,7 @@ func (this *LedgerStoreImp) submitBlock(block *types.Block, crossChainMsg *types
 	}
 	block.Header.Bookkeepers = bookKeepers
 	block.Header.SigData = sigData
-	log.Infof("submitBlock sppyly sign block height:%d,signData len:%d, bookKeeprs len:%d,", block.Header.Height,
+	log.Infof("submitBlock supply sign block height:%d,signData len:%d, bookkeeper len:%d,", block.Header.Height,
 		len(block.Header.SigData), len(block.Header.Bookkeepers))
 	//end
 	this.blockStore.NewBatch()
