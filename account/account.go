@@ -25,6 +25,7 @@ import (
 	"github.com/ontio/ontology/common/log"
 	"github.com/ontio/ontology/core/types"
 )
+var DefAccs []*Account
 
 /* crypto object */
 type Account struct {
