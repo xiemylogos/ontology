@@ -26,6 +26,8 @@ import (
 	"github.com/ontio/ontology/core/types"
 )
 
+var DefAccs []*Account
+
 /* crypto object */
 type Account struct {
 	PrivateKey keypair.PrivateKey

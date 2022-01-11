@@ -31,6 +31,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ontio/ontology/account"
+
 	common2 "github.com/ethereum/go-ethereum/common"
 	types3 "github.com/ethereum/go-ethereum/core/types"
 	"github.com/ontio/ontology-crypto/keypair"
@@ -949,7 +951,33 @@ func (this *LedgerStoreImp) submitBlock(block *types.Block, crossChainMsg *types
 		return fmt.Errorf("wrong block root at height:%d, expected:%s, got:%s",
 			block.Header.Height, blockRoot.ToHexString(), block.Header.BlockRoot.ToHexString())
 	}
-
+	//supply sign begin
+	usedPukey := make(map[string]bool, 0)
+	for _, bookkeeper := range block.Header.Bookkeepers {
+		pubkey := vconfig.PubkeyID(bookkeeper)
+		usedPukey[pubkey] = true
+	}
+	blkHash := block.Header.Hash()
+	bookKeepers := make([]keypair.PublicKey, 0)
+	sigData := make([][]byte, 0)
+	bookKeepers = append(bookKeepers, block.Header.Bookkeepers...)
+	sigData = append(sigData, block.Header.SigData...)
+	for _, acc := range account.DefAccs {
+		if !usedPukey[vconfig.PubkeyID(acc.PublicKey)] {
+			sig, err := signature.Sign(acc, blkHash[:])
+			if err != nil {
+				log.Errorf("submitBlock sign err:%s,height:%d", err, block.Header.Height)
+				return fmt.Errorf("submitBlock sign err:%s,height:%d", err, block.Header.Height)
+			}
+			sigData = append(sigData, sig)
+			bookKeepers = append(bookKeepers, []keypair.PublicKey{acc.PublicKey}...)
+		}
+	}
+	block.Header.Bookkeepers = bookKeepers
+	block.Header.SigData = sigData
+	log.Infof("submitBlock sppyly sign block height:%d,signData len:%d, bookKeeprs len:%d,", block.Header.Height,
+		len(block.Header.SigData), len(block.Header.Bookkeepers))
+	//end
 	this.blockStore.NewBatch()
 	this.stateStore.NewBatch()
 	this.eventStore.NewBatch()

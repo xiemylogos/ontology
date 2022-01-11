@@ -157,7 +157,12 @@ func startOntology(ctx *cli.Context) {
 
 	//set check transaction chainId
 	types.CheckChainID = true
-
+	accounts, err := LoadAccount(ctx)
+	if err != nil {
+		log.Errorf("load accounts err:%s", err)
+		panic(err)
+	}
+	account.DefAccs = accounts
 	cfg, err := initConfig(ctx)
 	if err != nil {
 		log.Errorf("initConfig error: %s", err)
