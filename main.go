@@ -22,9 +22,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/signal"
-	"io/ioutil"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -492,6 +492,7 @@ func GetAccountByPassword(ctx *cli.Context, path string) (*account.Account, bool
 		log.Error("getPassword error:", err)
 		return nil, false
 	}
+	defer cmdcom.ClearPasswd(pwd)
 	user, err := wallet.GetDefaultAccount(pwd)
 	if err != nil {
 		log.Error("getDefaultAccount error:", err)
