@@ -930,31 +930,84 @@ func (this *LedgerStoreImp) submitBlock(block *types.Block, crossChainMsg *types
 			block.Header.Height, blockRoot.ToHexString(), block.Header.BlockRoot.ToHexString())
 	}
 	//supply sign begin
-	usedPukey := make(map[string]bool, 0)
-	for _, bookkeeper := range block.Header.Bookkeepers {
-		pubkey := vconfig.PubkeyID(bookkeeper)
-		usedPukey[pubkey] = true
-	}
-	blkHash := block.Header.Hash()
-	bookKeepers := make([]keypair.PublicKey, 0)
-	sigData := make([][]byte, 0)
-	bookKeepers = append(bookKeepers, block.Header.Bookkeepers...)
-	sigData = append(sigData, block.Header.SigData...)
-	for _, acc := range account.DefAccs {
-		if !usedPukey[vconfig.PubkeyID(acc.PublicKey)] {
-			sig, err := signature.Sign(acc, blkHash[:])
-			if err != nil {
-				log.Errorf("submitBlock sign err:%s,height:%d", err, block.Header.Height)
-				return fmt.Errorf("submitBlock sign err:%s,height:%d", err, block.Header.Height)
-			}
-			sigData = append(sigData, sig)
-			bookKeepers = append(bookKeepers, []keypair.PublicKey{acc.PublicKey}...)
+	if block.Header.Height != 0 {
+		var prevHeader *types.Header
+		prevHeaderHash := block.Header.PrevBlockHash
+		prevHeader, err := this.GetHeaderByHash(prevHeaderHash)
+		if err != nil && err != scom.ErrNotFound {
+			return fmt.Errorf("get prev header error %s", err)
 		}
+		if prevHeader == nil {
+			return fmt.Errorf("cannot find pre header by blockHash %s", prevHeaderHash.ToHexString())
+		}
+		if prevHeader.Height+1 != block.Header.Height {
+			return fmt.Errorf("block height is incorrect")
+		}
+		if prevHeader.Timestamp >= block.Header.Timestamp {
+			return fmt.Errorf("block timestamp is incorrect")
+		}
+		var chainConfigHeight uint32
+		blkInfo, err := vconfig.VbftBlock(block.Header)
+		if err != nil {
+			return err
+		}
+		if blkInfo.NewChainConfig != nil {
+			prevBlockInfo, err := vconfig.VbftBlock(prevHeader)
+			if err != nil {
+				return err
+			}
+			if prevBlockInfo.NewChainConfig != nil {
+				chainConfigHeight = prevHeader.Height
+			} else {
+				chainConfigHeight = prevBlockInfo.LastConfigBlockNum
+			}
+		} else {
+			chainConfigHeight = blkInfo.LastConfigBlockNum
+		}
+		chainConfigHeader, err := this.GetHeaderByHeight(chainConfigHeight)
+		if err != nil && err != scom.ErrNotFound {
+			return fmt.Errorf("get chain config header error %s,height:%d", err, chainConfigHeight)
+		}
+		if chainConfigHeader == nil {
+			return fmt.Errorf("cannot find chain config header by height:%d", chainConfigHeight)
+		}
+		chanConfigBlkInfo, err := vconfig.VbftBlock(chainConfigHeader)
+		if err != nil {
+			return err
+		}
+		if chanConfigBlkInfo.NewChainConfig == nil {
+			return fmt.Errorf("cannot find newchainconfig header by height:%d", chainConfigHeight)
+		}
+		vbftPeerInfo := make(map[string]bool, 0)
+		for _, peerInfo := range chanConfigBlkInfo.NewChainConfig.Peers {
+			vbftPeerInfo[peerInfo.ID] = true
+		}
+		usedPukey := make(map[string]bool, 0)
+		for _, bookkeeper := range block.Header.Bookkeepers {
+			pubkey := vconfig.PubkeyID(bookkeeper)
+			usedPukey[pubkey] = true
+		}
+		blkHash := block.Header.Hash()
+		bookKeepers := make([]keypair.PublicKey, 0)
+		sigData := make([][]byte, 0)
+		bookKeepers = append(bookKeepers, block.Header.Bookkeepers...)
+		sigData = append(sigData, block.Header.SigData...)
+		for _, acc := range account.DefAccs {
+			if vbftPeerInfo[vconfig.PubkeyID(acc.PublicKey)] && !usedPukey[vconfig.PubkeyID(acc.PublicKey)] {
+				sig, err := signature.Sign(acc, blkHash[:])
+				if err != nil {
+					log.Errorf("submitBlock sign err:%s,height:%d", err, block.Header.Height)
+					return fmt.Errorf("submitBlock sign err:%s,height:%d", err, block.Header.Height)
+				}
+				sigData = append(sigData, sig)
+				bookKeepers = append(bookKeepers, []keypair.PublicKey{acc.PublicKey}...)
+			}
+		}
+		block.Header.Bookkeepers = bookKeepers
+		block.Header.SigData = sigData
+		log.Infof("submitBlock supply sign block height:%d,signData len:%d, bookkeeper len:%d,", block.Header.Height,
+			len(block.Header.SigData), len(block.Header.Bookkeepers))
 	}
-	block.Header.Bookkeepers = bookKeepers
-	block.Header.SigData = sigData
-	log.Infof("submitBlock supply sign block height:%d,signData len:%d, bookkeeper len:%d,", block.Header.Height,
-		len(block.Header.SigData), len(block.Header.Bookkeepers))
 	//end
 	this.blockStore.NewBatch()
 	this.stateStore.NewBatch()
