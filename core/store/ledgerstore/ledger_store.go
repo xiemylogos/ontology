@@ -23,8 +23,6 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"github.com/ontio/ontology/account"
-	"github.com/walletsvr/zec_signature_svr/tx"
 	"hash"
 	"math"
 	"os"
@@ -32,6 +30,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ontio/ontology/account"
 
 	"github.com/ontio/ontology-crypto/keypair"
 	"github.com/ontio/ontology/common"
@@ -1005,7 +1005,7 @@ func (this *LedgerStoreImp) submitBlock(block *types.Block, crossChainMsg *types
 	this.blockStore.NewBatch()
 	this.stateStore.NewBatch()
 	this.eventStore.NewBatch()
-	err := this.saveBlockToBlockStore(block)
+	err = this.saveBlockToBlockStore(block)
 	if err != nil {
 		return fmt.Errorf("save to block store height:%d error:%s", blockHeight, err)
 	}
