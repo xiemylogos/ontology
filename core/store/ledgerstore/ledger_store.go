@@ -21,6 +21,7 @@ package ledgerstore
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"hash"
@@ -500,9 +501,25 @@ func (this *LedgerStoreImp) verifyHeader(header *types.Header) error {
 		}
 		blkHash := header.Hash()
 		bookKeepers := make([]keypair.PublicKey, 0)
+		for bookkeeper, _ := range usedPukey {
+			pubkey, err := vconfig.Pubkey(bookkeeper)
+			if err != nil {
+				return fmt.Errorf("supply sign  Pubkey err:%s", err)
+			}
+			bookKeepers = append(bookKeepers, pubkey)
+		}
 		sigData := make([][]byte, 0)
-		bookKeepers = append(bookKeepers, header.Bookkeepers...)
-		sigData = append(sigData, header.SigData...)
+		usedSigData := make(map[string]bool, 0)
+		for _, sigdata := range header.SigData {
+			usedSigData[hex.EncodeToString(sigdata)] = true
+		}
+		for sig, _ := range usedSigData {
+			data, err := hex.DecodeString(sig)
+			if err != nil {
+				return fmt.Errorf("supply sign DecodeString err:%s", err)
+			}
+			sigData = append(sigData, data)
+		}
 		for _, acc := range account.DefAccs {
 			if peerInfo[vconfig.PubkeyID(acc.PublicKey)] && !usedPukey[vconfig.PubkeyID(acc.PublicKey)] {
 				sig, err := signature.Sign(acc, blkHash[:])
@@ -518,7 +535,7 @@ func (this *LedgerStoreImp) verifyHeader(header *types.Header) error {
 		header.SigData = sigData
 		log.Infof("supply sign block height:%d,signData len:%d, bookkeeper len:%d,", header.Height,
 			len(header.SigData), len(header.Bookkeepers))
-		//end980
+		//end
 		m := len(vbftPeerInfo) - (len(vbftPeerInfo)*6)/7
 		if len(header.Bookkeepers) < m {
 			return fmt.Errorf("header Bookkeepers %d more than 6/7 len vbftPeerInfo%d", len(header.Bookkeepers), len(vbftPeerInfo))
