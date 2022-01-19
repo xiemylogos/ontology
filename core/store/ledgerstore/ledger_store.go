@@ -654,6 +654,8 @@ func (this *LedgerStoreImp) SubmitBlock(block *types.Block, ccMsg *types.CrossCh
 		return fmt.Errorf("verifyHeader error %s", err)
 	}
 	if ccMsg != nil {
+		log.Infof("first crossChainMsg block height:%d", currBlockHeight)
+		panic("first crossChainMsg panic")
 		if ccMsg.Height != currBlockHeight {
 			return fmt.Errorf("cross chain msg height %d not equal next block height %d", blockHeight, ccMsg.Height)
 		}
