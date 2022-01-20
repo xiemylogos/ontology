@@ -648,10 +648,6 @@ func (this *LedgerStoreImp) SubmitBlock(block *types.Block, ccMsg *types.CrossCh
 	if blockHeight != nextBlockHeight {
 		return fmt.Errorf("block height %d not equal next block height %d", blockHeight, nextBlockHeight)
 	}
-	if block.Header.Height == 184 {
-		log.Info("SubmitBlock blockHeight less than 184 panic")
-		panic(nil)
-	}
 	err := this.verifyHeader(block.Header)
 	if err != nil {
 		return fmt.Errorf("verifyHeader error %s", err)
