@@ -41,7 +41,6 @@ import (
 	"github.com/ontio/ontology/common"
 	"github.com/ontio/ontology/common/config"
 	"github.com/ontio/ontology/common/log"
-	"github.com/ontio/ontology/common/password"
 	"github.com/ontio/ontology/consensus"
 	"github.com/ontio/ontology/core/genesis"
 	"github.com/ontio/ontology/core/ledger"
@@ -481,19 +480,21 @@ func waitToExit(db *ledger.Ledger) {
 	<-exit
 }
 
-func GetAccountByPassword(ctx *cli.Context, path string) (*account.Account, bool) {
+func GetAccountByPassword(ctx *cli.Context, path, pwd string) (*account.Account, bool) {
 	wallet, err := account.Open(path)
 	if err != nil {
 		log.Error("open wallet error:", err)
 		return nil, false
 	}
-	pwd, err := password.GetPassword()
-	if err != nil {
-		log.Error("getPassword error:", err)
-		return nil, false
-	}
-	defer cmdcom.ClearPasswd(pwd)
-	user, err := wallet.GetDefaultAccount(pwd)
+	/*
+		pwd, err := password.GetPassword()
+		if err != nil {
+			log.Error("getPassword error:", err)
+			return nil, false
+		}
+		defer cmdcom.ClearPasswd(pwd)
+	*/
+	user, err := wallet.GetDefaultAccount([]byte(pwd))
 	if err != nil {
 		log.Error("getDefaultAccount error:", err)
 		return nil, false
@@ -503,6 +504,7 @@ func GetAccountByPassword(ctx *cli.Context, path string) (*account.Account, bool
 
 type ConfigParam struct {
 	Path []string
+	Pwd  []string
 }
 
 func LoadUserAccount(ctx *cli.Context) ([]*account.Account, error) {
@@ -518,12 +520,27 @@ func LoadUserAccount(ctx *cli.Context) ([]*account.Account, error) {
 		return nil, err
 	}
 	var accs []*account.Account
-	for _, path := range configParam.Path {
-		user, ok := GetAccountByPassword(ctx, path)
+	pwdInfo := make(map[int]string, 0)
+	for index, pwd := range configParam.Pwd {
+		pwdInfo[index] = pwd
+	}
+	for index, path := range configParam.Path {
+		user, ok := GetAccountByPassword(ctx, path, pwdInfo[index])
 		if !ok {
 			return nil, fmt.Errorf("pwd error")
 		}
 		accs = append(accs, user)
 	}
+	defer ClearPwdInfo(pwdInfo, configParam.Pwd)
 	return accs, nil
+}
+
+func ClearPwdInfo(pwdInfo map[int]string, pwds []string) {
+	for k, _ := range pwdInfo {
+		pwdInfo[k] = ""
+	}
+	size := len(pwds)
+	for i := 0; i < size; i++ {
+		pwds[i] = ""
+	}
 }

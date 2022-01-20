@@ -7,5 +7,14 @@
     "wallets/peer5/wallet.dat",
     "wallets/peer6/wallet.dat",
     "wallets/peer7/wallet.dat"
+  ],
+  "Pwd":[
+    "pwd1",
+    "pwd2",
+    "pwd3",
+    "pwd4",
+    "pwd5",
+    "pwd6",
+    "pwd7"
   ]
 }
