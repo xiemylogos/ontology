@@ -653,8 +653,6 @@ func (this *LedgerStoreImp) SubmitBlock(block *types.Block, ccMsg *types.CrossCh
 		return fmt.Errorf("verifyHeader error %s", err)
 	}
 	if ccMsg != nil {
-		log.Infof("first crossChainMsg block height:%d", currBlockHeight)
-		panic("first crossChainMsg panic")
 		if ccMsg.Height != currBlockHeight {
 			return fmt.Errorf("cross chain msg height %d not equal next block height %d", blockHeight, ccMsg.Height)
 		}
@@ -950,6 +948,10 @@ func (this *LedgerStoreImp) tryPruneBlock(header *types.Header) bool {
 func (this *LedgerStoreImp) submitBlock(block *types.Block, crossChainMsg *types.CrossChainMsg, result store.ExecuteResult) error {
 	blockHash := block.Hash()
 	blockHeight := block.Header.Height
+	if crossChainMsg != nil {
+		log.Infof("submitBlock first crossChainMsg block height:%d", blockHeight)
+		panic("submitBlock first crossChainMsg panic")
+	}
 	blockRoot := this.GetBlockRootWithNewTxRoots(block.Header.Height, []common.Uint256{block.Header.TransactionsRoot})
 	if block.Header.Height != 0 && blockRoot != block.Header.BlockRoot {
 		return fmt.Errorf("wrong block root at height:%d, expected:%s, got:%s",
