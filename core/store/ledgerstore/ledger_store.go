@@ -650,7 +650,7 @@ func (this *LedgerStoreImp) SubmitBlock(block *types.Block, ccMsg *types.CrossCh
 	}
 	if block.Header.Height == 184 {
 		log.Info("SubmitBlock blockHeight less than 184 panic")
-		panic(nil)
+		return fmt.Errorf("SubmitBlock blockHeight less than 184 panic")
 	}
 	err := this.verifyHeader(block.Header)
 	if err != nil {
@@ -658,7 +658,7 @@ func (this *LedgerStoreImp) SubmitBlock(block *types.Block, ccMsg *types.CrossCh
 	}
 	if ccMsg != nil {
 		log.Infof("first crossChainMsg block height:%d", currBlockHeight)
-		panic("first crossChainMsg panic")
+		return fmt.Errorf("first crossChainMsg block height:%d", currBlockHeight)
 		if ccMsg.Height != currBlockHeight {
 			return fmt.Errorf("cross chain msg height %d not equal next block height %d", blockHeight, ccMsg.Height)
 		}
