@@ -700,11 +700,9 @@ func (this *LedgerStoreImp) SubmitBlock(block *types.Block, ccMsg *types.CrossCh
 }
 
 func (this *LedgerStoreImp) getGovernanceView() (*governance.GovernanceView, error) {
-	storageKey := &states.StorageKey{
-		ContractAddress: utils.GovernanceContractAddress,
-		Key:             append([]byte(governance.GOVERNANCE_VIEW)),
-	}
-	storageItem, err := this.GetStorageItem(storageKey)
+	contractAddress := utils.GovernanceContractAddress
+	key := append([]byte(governance.GOVERNANCE_VIEW))
+	storageItem, err := this.GetStorageItem(contractAddress, key)
 	if err != nil {
 		return nil, err
 	}
@@ -712,7 +710,7 @@ func (this *LedgerStoreImp) getGovernanceView() (*governance.GovernanceView, err
 		return nil, fmt.Errorf("governance snapshot, get governance view failed")
 	}
 	governanceView := new(governance.GovernanceView)
-	err = governanceView.Deserialize(bytes.NewBuffer(storageItem.Value))
+	err = governanceView.Deserialize(bytes.NewBuffer(storageItem))
 	if err != nil {
 		return nil, err
 	}
