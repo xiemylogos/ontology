@@ -19,6 +19,7 @@
 package ledgerstore
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
@@ -30,6 +31,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/ontio/ontology/smartcontract/service/native/governance"
 
 	common2 "github.com/ethereum/go-ethereum/common"
 	types3 "github.com/ethereum/go-ethereum/core/types"
@@ -92,6 +95,7 @@ type LedgerStoreImp struct {
 	crossChainStore      *CrossChainStore                 //crossChainStore for saving cross chain msg.
 	storedIndexCount     uint32                           //record the count of have saved block index
 	currBlockHeight      uint32                           //Current block height
+	view                 uint32                           //Current view
 	currBlockHash        common.Uint256                   //Current block hash
 	headerCache          map[common.Uint256]*types.Header //BlockHash => Header
 	headerIndex          map[uint32]common.Uint256        //Header index, Mapping header height => block hash
@@ -675,6 +679,101 @@ func (this *LedgerStoreImp) SubmitBlock(block *types.Block, ccMsg *types.CrossCh
 		return fmt.Errorf("saveBlock error %s", err)
 	}
 	this.delHeaderCache(block.Hash())
+	//get current view
+	governanceView, err := this.getGovernanceView()
+	if err != nil {
+		return err
+	}
+	view := governanceView.View
+	if view == this.view {
+		return nil
+	}
+
+	//data snapshot
+	err = this.Snapshot(utils.ConcatKey(utils.GovernanceContractAddress, governance.AUTHORIZE_INFO_POOL))
+	if err != nil {
+		panic("snapshot panic")
+	}
+
+	this.view = view
+	return nil
+}
+
+func (this *LedgerStoreImp) getGovernanceView() (*governance.GovernanceView, error) {
+	storageKey := &states.StorageKey{
+		ContractAddress: utils.GovernanceContractAddress,
+		Key:             append([]byte(governance.GOVERNANCE_VIEW)),
+	}
+	storageItem, err := this.GetStorageItem(storageKey)
+	if err != nil {
+		return nil, err
+	}
+	if storageItem == nil {
+		return nil, fmt.Errorf("governance snapshot, get governance view failed")
+	}
+	governanceView := new(governance.GovernanceView)
+	err = governanceView.Deserialize(bytes.NewBuffer(storageItem.Value))
+	if err != nil {
+		return nil, err
+	}
+	return governanceView, nil
+}
+
+type AuthorizeItem struct {
+	PeerPubKey           string `json:"peer_pub_key"`
+	Address              string `json:"address"`
+	ConsensusPos         uint64 `json:"consensus_pos"`
+	CandidatePos         uint64 `json:"candidate_pos"`
+	NewPos               uint64 `json:"new_pos"`
+	WithdrawConsensusPos uint64 `json:"withdraw_consensus_pos"`
+	WithdrawCandidatePos uint64 `json:"withdraw_candidate_pos"`
+	WithdrawUnfreezePos  uint64 `json:"withdraw_unfreeze_pos"`
+}
+
+func (this *LedgerStoreImp) Snapshot(key []byte) error {
+	prefix := make([]byte, 1+len(key))
+	prefix[0] = byte(scom.ST_STORAGE)
+	copy(prefix[1:], key)
+	iter := this.stateStore.store.NewIterator(prefix)
+	defer iter.Release()
+	f, err := os.Create("authorizePeers.json")
+	if err != nil {
+		return fmt.Errorf("os.Create error: %v", err)
+	}
+	defer f.Close()
+	w := bufio.NewWriter(f)
+	result := make([]*AuthorizeItem, 0)
+	for has := iter.First(); has; has = iter.Next() {
+		authorizeInfoStore, err := states.GetValueFromRawStorageItem(iter.Value())
+		if err != nil {
+			return fmt.Errorf("authorizeInfoStore is not available!:%v", err)
+		}
+
+		authorizeInfo := new(governance.AuthorizeInfo)
+		if err := authorizeInfo.Deserialization(common.NewZeroCopySource(authorizeInfoStore)); err != nil {
+			return fmt.Errorf("deserialize, deserialize authorizeInfo error: %v", err)
+		}
+		item := &AuthorizeItem{
+			PeerPubKey:           authorizeInfo.PeerPubkey,
+			Address:              authorizeInfo.Address.ToBase58(),
+			ConsensusPos:         authorizeInfo.ConsensusPos,
+			CandidatePos:         authorizeInfo.CandidatePos,
+			NewPos:               authorizeInfo.NewPos,
+			WithdrawConsensusPos: authorizeInfo.WithdrawConsensusPos,
+			WithdrawCandidatePos: authorizeInfo.WithdrawCandidatePos,
+			WithdrawUnfreezePos:  authorizeInfo.WithdrawUnfreezePos,
+		}
+		result = append(result, item)
+	}
+	info, err := json.Marshal(result)
+	if err != nil {
+		return fmt.Errorf("snapshot, json.Marshal error: %v", err)
+	}
+	w.WriteString(string(info))
+	w.Flush()
+	if err := iter.Error(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -717,6 +816,23 @@ func (this *LedgerStoreImp) AddBlock(block *types.Block, ccMsg *types.CrossChain
 		return fmt.Errorf("saveBlock error %s", err)
 	}
 	this.delHeaderCache(block.Hash())
+	//get current view
+	governanceView, err := this.getGovernanceView()
+	if err != nil {
+		return err
+	}
+	view := governanceView.View
+	if view == this.view {
+		return nil
+	}
+
+	//data snapshot
+	err = this.Snapshot(utils.ConcatKey(utils.GovernanceContractAddress, governance.AUTHORIZE_INFO_POOL))
+	if err != nil {
+		panic("snapshot panic")
+	}
+
+	this.view = view
 	return nil
 }
 
