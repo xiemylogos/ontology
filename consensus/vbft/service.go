@@ -1189,6 +1189,7 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 			if err := self.poolActor.VerifyBlock(txs, validHeight); err != nil && err != actor.ErrTimeout {
 				log.Errorf("server %d verify proposal blk from %d failed, blk %d, txs %d, err: %s",
 					self.Index, msg.Block.getProposer(), msgBlkNum, len(txs), err)
+				self.msgPool.DropMsg(msg)
 				return
 			} else if err == actor.ErrTimeout {
 				log.Errorf("server %d verify proposal blk from %d timedout, blk %d, txs %d, err: %s",
@@ -1199,6 +1200,7 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 				if err := self.incrValidator.Verify(tx, validHeight, nonceCtx); err != nil {
 					log.Errorf("server %d verify proposal tx from %d failed, blk %d, txs %d, err: %s",
 						self.Index, msg.Block.getProposer(), msgBlkNum, len(txs), err)
+					self.msgPool.DropMsg(msg)
 					return
 				}
 			}
