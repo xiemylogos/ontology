@@ -77,6 +77,7 @@ var senderLimitor = func() map[common.Address]bool {
 		"AYn9spXyNG8hy2hSNJktLR5LesQY97vXN7",
 		"ATZRhpQymY2CZXonv7h3KqptQWAbc9PhXe",
 		"AUi6qQQe1R2ka5mG2RdY1EMWty3BnJWtL7",
+		"AWS7uiubKtqvRDH8AfBDsoaSMC4eDfhc4r", //add test code
 	}
 
 	limitMap := make(map[common.Address]bool)
@@ -101,9 +102,12 @@ func isSenderLimited(senders []common.Address) bool {
 
 // preExecCheck checks whether preExec pass
 func preExecCheck(txn *tx.Transaction) (bool, string) {
+	//only for test
+	/*
 	if isSenderLimited(txn.GetSignatureAddresses()) {
 		return false, fmt.Sprintf("limited")
 	}
+	 */
 	result, err := ledger.DefLedger.PreExecuteContract(txn)
 	if err != nil {
 		log.Debugf("preExecCheck: failed to preExecuteContract tx %x err %v",
