@@ -1166,6 +1166,7 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 	}
 	if !self.verifyCrossChainMsg(msg) {
 		log.Errorf("verify cross chain message error:%+v\n", msg.Block.CrossChainMsg)
+		self.msgPool.DropMsg(msg)
 		return
 	}
 	txs := msg.Block.Block.Transactions
