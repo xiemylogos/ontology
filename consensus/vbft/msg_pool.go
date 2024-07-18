@@ -30,17 +30,19 @@ var errDropFarFutureMsg = errors.New("msg pool dropped msg for far future")
 type ConsensusRoundMsgs map[MsgType][]ConsensusMsg // indexed by MsgType (proposal, endorsement, ...)
 
 type ConsensusRound struct {
-	blockNum uint32
-	msgs     map[MsgType][]ConsensusMsg
-	msgHashs map[common.Uint256]interface{} // for msg-dup checking
+	blockNum  uint32
+	msgs      map[MsgType][]ConsensusMsg
+	msgHashs  map[common.Uint256]interface{} // for msg-dup checking
+	msgStatus map[common.Uint256]bool        //check proposalmsg is verify
 }
 
 func newConsensusRound(num uint32) *ConsensusRound {
 
 	r := &ConsensusRound{
-		blockNum: num,
-		msgs:     make(map[MsgType][]ConsensusMsg),
-		msgHashs: make(map[common.Uint256]interface{}),
+		blockNum:  num,
+		msgs:      make(map[MsgType][]ConsensusMsg),
+		msgHashs:  make(map[common.Uint256]interface{}),
+		msgStatus: make(map[common.Uint256]bool),
 	}
 
 	r.msgs[BlockProposalMessage] = make([]ConsensusMsg, 0)
@@ -58,6 +60,15 @@ func (self *ConsensusRound) addMsg(msg ConsensusMsg, msgHash common.Uint256) {
 	msgs := self.msgs[msg.Type()]
 	self.msgs[msg.Type()] = append(msgs, msg)
 	self.msgHashs[msgHash] = msg
+	self.msgStatus[msgHash] = false
+}
+
+func (self *ConsensusRound) setMsgStatus(msgHash common.Uint256) bool {
+	if _, present := self.msgStatus[msgHash]; !present {
+		return false
+	}
+	self.msgStatus[msgHash] = true
+	return true
 }
 
 func (self *ConsensusRound) dropMsg(msg ConsensusMsg) {
@@ -70,6 +81,7 @@ func (self *ConsensusRound) dropMsg(msg ConsensusMsg) {
 			for hash, m := range self.msgHashs {
 				if m == msg {
 					delete(self.msgHashs, hash)
+					delete(self.msgStatus, hash)
 					return
 				}
 			}
@@ -79,6 +91,13 @@ func (self *ConsensusRound) dropMsg(msg ConsensusMsg) {
 
 func (self *ConsensusRound) hasMsg(msg ConsensusMsg, msgHash common.Uint256) bool {
 	if _, present := self.msgHashs[msgHash]; present {
+		return present
+	}
+	return false
+}
+
+func (self *ConsensusRound) MsgStatus(msgHash common.Uint256) bool {
+	if _, present := self.msgStatus[msgHash]; present {
 		return present
 	}
 	return false
@@ -147,6 +166,28 @@ func (pool *MsgPool) HasMsg(msg ConsensusMsg, msgHash common.Uint256) bool {
 	}
 
 	return false
+}
+
+func (pool *MsgPool) SetMsgStatus(msg ConsensusMsg, msgHash common.Uint256) bool {
+	pool.lock.Lock()
+	defer pool.lock.Unlock()
+
+	if roundMsgs, present := pool.rounds[msg.GetBlockNum()]; !present {
+		return false
+	} else {
+		return roundMsgs.setMsgStatus(msgHash)
+	}
+}
+
+func (pool *MsgPool) GetMsgStatus(msg ConsensusMsg, msgHash common.Uint256) bool {
+	pool.lock.RLock()
+	defer pool.lock.RUnlock()
+
+	if roundMsgs, present := pool.rounds[msg.GetBlockNum()]; !present {
+		return false
+	} else {
+		return roundMsgs.MsgStatus(msgHash)
+	}
 }
 
 func (pool *MsgPool) GetProposalMsgs(blocknum uint32) []ConsensusMsg {

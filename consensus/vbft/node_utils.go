@@ -216,6 +216,7 @@ func (self *Server) getHighestRankProposal(blockNum uint32, proposals []*blockPr
 			continue
 		}
 
+
 		if r := self.getProposerRankLocked(blockNum, p.Block.getProposer()); r < proposerRank {
 			proposerRank = r
 			proposal = p

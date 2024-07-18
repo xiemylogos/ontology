@@ -723,7 +723,8 @@ func (self *Server) startNewRound() error {
 		self.processConsensusMsg(endorses[0])
 		return nil
 	} else if proposal != nil {
-		self.processProposalMsg(proposal)
+		h, _ := HashMsg(proposal)
+		self.processProposalMsg(proposal,h)
 		return nil
 	}
 	if err := self.timer.startTxTicker(blkNum); err != nil {
@@ -823,7 +824,7 @@ func (self *Server) onConsensusMsg(peerIdx uint32, msg ConsensusMsg, msgHash com
 				log.Errorf("failed to add proposal msg (%d) to pool", msgBlkNum)
 				return
 			}
-			self.processProposalMsg(pMsg)
+			self.processProposalMsg(pMsg,msgHash)
 		}
 
 	case BlockEndorseMessage:
@@ -1094,7 +1095,7 @@ func (self *Server) verifyCrossChainMsg(msg *blockProposalMsg) bool {
 	return true
 }
 
-func (self *Server) processProposalMsg(msg *blockProposalMsg) {
+func (self *Server) processProposalMsg(msg *blockProposalMsg,msgHash common.Uint256) {
 	msgBlkNum := msg.GetBlockNum()
 	blk, prevBlkHash := self.blockPool.getSealedBlock(msg.GetBlockNum() - 1)
 	if blk == nil {
@@ -1205,10 +1206,20 @@ func (self *Server) processProposalMsg(msg *blockProposalMsg) {
 					return
 				}
 			}
+			if !self.msgPool.SetMsgStatus(msg,msgHash) {
+				log.Errorf("server %d SetMsgStatus tx from %d failed, blk %d",
+					self.Index, msg.Block.getProposer(), msgBlkNum)
+				self.msgPool.DropMsg(msg)
+				return
+			}
 			self.processConsensusMsg(msg)
 		}()
 	} else {
 		// empty block, process directly
+		if !self.msgPool.SetMsgStatus(msg,msgHash) {
+			log.Errorf("server %d SetMsgStatus from %d failed, blk %d",
+				self.Index, msg.Block.getProposer(), msgBlkNum)
+		}
 		self.processConsensusMsg(msg)
 	}
 }
@@ -2267,7 +2278,7 @@ func (self *Server) makeProposal(blkNum uint32, forEmpty bool) error {
 	// add proposal to self
 	h, _ := HashMsg(proposal)
 	self.msgPool.AddMsg(proposal, h)
-	self.processProposalMsg(proposal)
+	self.processProposalMsg(proposal,h)
 	self.broadcast(proposal)
 	return nil
 }
@@ -2453,7 +2464,8 @@ func (self *Server) catchConsensus(blkNum uint32) error {
 		}
 	}
 	if proposal != nil && self.isProposer(blkNum, proposal.Block.getProposer()) {
-		self.processProposalMsg(proposal)
+		h, _ := HashMsg(proposal)
+		self.processProposalMsg(proposal,h)
 	}
 
 	if self.isEndorser(blkNum, self.Index) && !endorseDone && proposal != nil {
