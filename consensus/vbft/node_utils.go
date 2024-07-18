@@ -215,7 +215,10 @@ func (self *Server) getHighestRankProposal(blockNum uint32, proposals []*blockPr
 			log.Errorf("server %d, diff blockNum found when get highest rank proposal,blockNum:%d", self.Index, blockNum)
 			continue
 		}
-
+		/*
+		h, _ := HashMsg(proposal)
+		self.processProposalMsg(proposal,h)
+		 */
 
 		if r := self.getProposerRankLocked(blockNum, p.Block.getProposer()); r < proposerRank {
 			proposerRank = r

@@ -283,6 +283,7 @@ func (self *StateMgr) onPeerDisconnected(peerIdx uint32) {
 }
 
 func (self *StateMgr) onLiveTick(evt *StateEvent) {
+	log.Infof("onLiveTick evt.blockNum:%d,lastTickChainHeight:%d",evt.blockNum,self.lastTickChainHeight)
 	if evt.blockNum > self.lastTickChainHeight {
 		self.lastTickChainHeight = evt.blockNum
 		return
